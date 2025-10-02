@@ -2,7 +2,7 @@ import { sendMessage } from "./background.js";
 
 console.log("LLM Caller Loaded");
 
-export async function invokeLLM(tabId, userSelectionContext) {
+export async function invokeLLM(tabId, popupId, userSelectionContext) {
   const API_KEY = "";
 
   const request = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -29,7 +29,7 @@ export async function invokeLLM(tabId, userSelectionContext) {
           content: [
             {
               type: "text",
-              text: userSelectionContext,
+              text: `This is what the user selected: \`${userSelectionContext}\``,
             },
           ],
         },
@@ -67,7 +67,7 @@ export async function invokeLLM(tabId, userSelectionContext) {
             const parsed = JSON.parse(data);
             const content = parsed.choices[0].delta.content;
             if (content) {
-              sendMessage(tabId, content);
+              sendMessage(tabId, popupId, content);
             }
           } catch (e) {}
         }
