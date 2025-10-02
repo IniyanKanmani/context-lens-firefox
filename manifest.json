@@ -1,12 +1,18 @@
 {
-  "manifest_version": 2,
-  "name": "ContextLens",
+  "manifest_version": 3,
+  "name": "Context Lens",
   "version": "0.0",
   "description": "**ContextLens** is a Firefox extension designed to bring contextual AI assistance directly to your browser. Simply highlight any text on a webpage, use a configured keyboard shortcut, and ContextLens will display a insightful reply, helping you understand, summarize, or elaborate on the highlighted content without leaving your current tab in a popup.",
+  "permissions": ["activeTab", "scripting"],
+  "background": {
+    "scripts": ["src/background.js"],
+    "type": "module"
+  },
   "content_scripts": [
     {
       "matches": ["*://*/*"],
-      "js": ["src/main.js"]
+      "js": ["src/content.js"],
+      "type": "module"
     }
   ]
 }
