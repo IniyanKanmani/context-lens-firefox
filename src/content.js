@@ -27,8 +27,14 @@ document.addEventListener("keydown", (event) => {
 document.addEventListener("click", (event) => {
   const clickedElement = event.target;
   const isInsidePopup = clickedElement.closest(".context-lens-popup");
+  const elementId = clickedElement.id;
 
-  if (!isInsidePopup) removeAllPopups();
+  if (!isInsidePopup) {
+    removeAllPopups();
+  } else if (elementId.startsWith("popup-")) {
+    const popupId = parseInt(elementId.split("-")[1]);
+    removeBranchPopups(popupId);
+  }
 });
 
 function sendMessage(popupId, content) {

@@ -69,14 +69,6 @@ function createPopup(popupId, rect) {
   return popup;
 }
 
-function removeAllPopups() {
-  for (const [_, data] of popups) {
-    data.element.remove();
-  }
-  popups.clear();
-  popupCounter = 0;
-}
-
 function updatePopupContent(popupId, content) {
   const popupData = popups.get(popupId);
   if (popupData) {
@@ -92,4 +84,26 @@ function updatePopupContent(popupId, content) {
       popupData.element.textContent = popupData.content;
     }
   }
+}
+
+function removeBranchPopups(popupId) {
+  let idToRemove = [];
+
+  for (const [id, data] of popups) {
+    if (id > popupId) {
+      idToRemove.push(id);
+      data.element.remove();
+    }
+  }
+
+  idToRemove.forEach((id) => popups.delete(id));
+}
+
+function removeAllPopups() {
+  for (const [_, data] of popups) {
+    data.element.remove();
+  }
+
+  popups.clear();
+  popupCounter = 0;
 }
