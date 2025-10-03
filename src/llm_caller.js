@@ -1,15 +1,17 @@
+import { getEnv } from "./get_env.js";
+import { systemPrompt } from "./prompt.js";
 import { sendMessage } from "./background.js";
 
-console.log("LLM Caller Loaded");
+console.log("LLM File Loaded");
 
 export async function invokeLLM(tabId, popupId, userSelectionContext) {
-  const API_KEY = "";
+  const OPENROUTER_API_KEY = await getEnv("OPENROUTER_API_KEY");
 
   const request = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: "Bearer " + API_KEY,
+      Authorization: "Bearer " + OPENROUTER_API_KEY,
     },
     body: JSON.stringify({
       model: "z-ai/glm-4.5-air:free",
@@ -20,7 +22,7 @@ export async function invokeLLM(tabId, popupId, userSelectionContext) {
           content: [
             {
               type: "text",
-              text: "Explain very concisely what the user asks for. **Important** keep responses to less than 2 lines",
+              text: systemPrompt,
             },
           ],
         },
@@ -29,7 +31,7 @@ export async function invokeLLM(tabId, popupId, userSelectionContext) {
           content: [
             {
               type: "text",
-              text: `This is what the user selected: \`${userSelectionContext}\``,
+              text: userSelectionContext,
             },
           ],
         },
@@ -37,7 +39,11 @@ export async function invokeLLM(tabId, popupId, userSelectionContext) {
     }),
   });
 
-  const reader = request.body?.getReader();
+  await processStream(tabId, popupId, request.body);
+}
+
+async function processStream(tabId, popupId, body) {
+  const reader = body?.getReader();
   if (!reader) {
     throw new Error("Response body is not readable");
   }
