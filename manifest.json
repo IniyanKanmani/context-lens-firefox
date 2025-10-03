@@ -16,8 +16,13 @@
   "content_scripts": [
     {
       "matches": ["*://*/*"],
-      "js": ["src/content.js"],
-      "type": "module"
+      "js": ["src/content.js", "src/popup.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "matches": ["*://*/*"],
+      "resources": ["src/popup.css"]
     }
   ]
 }
