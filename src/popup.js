@@ -17,7 +17,7 @@ function createPopup(popupId, rect) {
 
   // Vertical Calculation
   let top;
-  const estimatedHeight = 85;
+  const estimatedHeight = 77;
   const spaceAbove = rect.top;
   const spaceBetweenV = rect.bottom - rect.top;
   const spaceBelow = window.innerHeight - rect.bottom;
