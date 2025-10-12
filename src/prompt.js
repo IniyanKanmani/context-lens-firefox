@@ -1,5 +1,3 @@
-console.log("Prompt File Loaded");
-
 export const systemPrompt = `
   <role>
     You are Context Lens, an LLM-powered Firefox extension that delivers quick, contextual explanations for user-selected text on web pages

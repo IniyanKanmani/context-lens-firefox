@@ -1,5 +1,3 @@
-console.log("Popup File Loaded");
-
 const link = document.createElement("link");
 link.rel = "stylesheet";
 link.href = browser.runtime.getURL("src/popup.css");

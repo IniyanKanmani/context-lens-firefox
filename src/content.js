@@ -1,5 +1,3 @@
-console.log("Content File Loaded");
-
 browser.runtime.onMessage.addListener((message, _, __) => {
   if (message.type === "LLM_STREAM_CHUNK") {
     updatePopupContent(message.popupId, message.content);

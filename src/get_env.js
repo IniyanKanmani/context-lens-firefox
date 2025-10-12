@@ -1,5 +1,3 @@
-console.log("Env File Loaded");
-
 export async function getEnv(key) {
   let value = "";
 

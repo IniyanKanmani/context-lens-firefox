@@ -37,6 +37,12 @@ export async function invokeLLM(tabId, popupId, userSelectionContext) {
           ],
         },
       ],
+      provider: {
+        allow_fallbacks: true,
+        data_collection: "deny",
+        zdr: true,
+        sort: "latency",
+      },
     }),
   });
 
