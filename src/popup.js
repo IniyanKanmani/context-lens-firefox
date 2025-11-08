@@ -61,6 +61,7 @@ function createPopup(popupId, rect) {
   popup.style.left = left + "px";
 
   popup.classList.add("loading");
+  popup.textContent = "Fetching...";
   document.body.appendChild(popup);
   popups.set(popupId, {
     element: popup,
@@ -71,7 +72,27 @@ function createPopup(popupId, rect) {
   return popup;
 }
 
-function updatePopupContent(popupId, content) {
+function handleLLMRequestSuccess(popupId) {
+  const popupData = popups.get(popupId);
+  if (popupData) {
+    popupData.element.textContent = "Generating...";
+  }
+}
+
+function handleLLMRequestFailure(popupId) {
+  const popupData = popups.get(popupId);
+  if (popupData) {
+    popupData.element.classList.remove("loading");
+    popupData.element.textContent = "Request failed. Please retry...";
+
+    setTimeout(() => {
+      popupData.element.remove();
+      popups.delete(popupId);
+    }, 3000);
+  }
+}
+
+function handleLLMStreamChunk(popupId, content) {
   const popupData = popups.get(popupId);
 
   if (!popupData) {
@@ -89,6 +110,18 @@ function updatePopupContent(popupId, content) {
 
   popupData.content += content;
   popupData.element.textContent = popupData.content;
+}
+
+function handleLLMStreamClosed(popupId) {
+  const popupData = popups.get(popupId);
+  if (popupData) {
+    setTimeout(() => {
+      popupData.element.classList.add("complete");
+      setTimeout(() => {
+        popupData.element.classList.remove("complete");
+      }, 750);
+    }, 250);
+  }
 }
 
 function removeBranchPopups(popupId) {

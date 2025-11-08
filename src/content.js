@@ -1,7 +1,12 @@
 browser.runtime.onMessage.addListener((message, _, __) => {
-  if (message.type === "LLM_STREAM_CHUNK") {
-    updatePopupContent(message.popupId, message.content);
+  if (message.type === "LLM_REQUEST_SUCCESS") {
+    handleLLMRequestSuccess(message.popupId);
+  } else if (message.type === "LLM_REQUEST_FAILURE") {
+    handleLLMRequestFailure(message.popupId);
+  } else if (message.type === "LLM_STREAM_CHUNK") {
+    handleLLMStreamChunk(message.popupId, message.content);
   } else if (message.type === "LLM_STREAM_CLOSED") {
+    handleLLMStreamClosed(message.popupId);
   }
 });
 

@@ -25,21 +25,31 @@
 .context-lens-popup.loading {
   background: linear-gradient(90deg, #333 25%, #555 50%, #333 75%);
   background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+  animation: shimmer-lr 1.5s infinite;
   overflow-y: hidden;
 }
 
-.context-lens-popup.loading::before {
-  content: "Generating...";
-  display: block;
-  height: 1.2em;
+.context-lens-popup.complete {
+  background: linear-gradient(180deg, #333 25%, #555 50%, #333 75%);
+  background-size: 100% 200%;
+  animation: shimmer-tb 1.5s;
+  overflow-y: auto;
 }
 
-@keyframes shimmer {
+@keyframes shimmer-lr {
   0% {
     background-position: 200% 0;
   }
   100% {
     background-position: -200% 0;
+  }
+}
+
+@keyframes shimmer-tb {
+  0% {
+    background-position: 0% 100%;
+  }
+  100% {
+    background-position: 0% -100%;
   }
 }

@@ -53,7 +53,12 @@ export async function invokeLLM(tabId, popupId, userSelectionContext) {
     }),
   });
 
-  await processStream(tabId, popupId, request.body);
+  if (request.status === 200) {
+    sendMessage("LLM_REQUEST_SUCCESS", tabId, popupId, request.status);
+    await processStream(tabId, popupId, request.body);
+  } else {
+    sendMessage("LLM_REQUEST_FAILURE", tabId, popupId, request.status);
+  }
 }
 
 async function processStream(tabId, popupId, body) {
@@ -94,7 +99,7 @@ async function processStream(tabId, popupId, body) {
       }
     }
   } finally {
-    sendMessage("LLM_STREAM_CLOSED", tabId, popupId, null);
     reader.cancel();
+    sendMessage("LLM_STREAM_CLOSED", tabId, popupId, null);
   }
 }
