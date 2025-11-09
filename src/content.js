@@ -1,17 +1,24 @@
+let isProcessingRequest = false;
+
 browser.runtime.onMessage.addListener((message, _, __) => {
-  if (message.type === "LLM_REQUEST_SUCCESS") {
+  if (message.type === "SER_LLM_REQUEST_SUCCESS") {
     handleLLMRequestSuccess(message.popupId);
-  } else if (message.type === "LLM_REQUEST_FAILURE") {
+  } else if (message.type === "SER_LLM_REQUEST_FAILURE") {
     handleLLMRequestFailure(message.popupId);
-  } else if (message.type === "LLM_STREAM_CHUNK") {
+    isProcessingRequest = false;
+  } else if (message.type === "SER_LLM_STREAM_CHUNK") {
     handleLLMStreamChunk(message.popupId, message.content);
-  } else if (message.type === "LLM_STREAM_CLOSED") {
+  } else if (message.type === "SER_LLM_STREAM_CANCELED") {
+    removePopup(message.popupId);
+    isProcessingRequest = false;
+  } else if (message.type === "SER_LLM_STREAM_CLOSED") {
     handleLLMStreamClosed(message.popupId);
+    isProcessingRequest = false;
   }
 });
 
 document.addEventListener("keydown", (event) => {
-  if (event.shiftKey && event.altKey) {
+  if (!isProcessingRequest && event.shiftKey && event.altKey) {
     const selection = document.getSelection();
 
     if (selection && selection.toString().trim() !== "") {
@@ -21,9 +28,16 @@ document.addEventListener("keydown", (event) => {
       const popupId = ++popupCounter;
       createPopup(popupId, rect);
 
-      sendMessage("TEXT_MARKED", popupId, selection.toString().trim());
+      isProcessingRequest = true;
+      sendMessage("WEB_TEXT_MARKED", popupId, selection.toString().trim());
     }
-  } else if (event.key === "Escape") removeAllPopups();
+  } else if (event.key === "Escape") {
+    if (isProcessingRequest) {
+      sendMessage("WEB_CANCEL_STREAM", popupCounter, null);
+    } else {
+      removeAllPopups();
+    }
+  }
 });
 
 document.addEventListener("mousedown", (event) => {

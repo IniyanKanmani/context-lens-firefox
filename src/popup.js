@@ -74,22 +74,28 @@ function createPopup(popupId, rect) {
 
 function handleLLMRequestSuccess(popupId) {
   const popupData = popups.get(popupId);
-  if (popupData) {
-    popupData.element.textContent = "Generating...";
+
+  if (!popupData) {
+    return;
   }
+
+  popupData.element.textContent = "Generating...";
 }
 
 function handleLLMRequestFailure(popupId) {
   const popupData = popups.get(popupId);
-  if (popupData) {
-    popupData.element.classList.remove("loading");
-    popupData.element.textContent = "Request failed. Please retry...";
 
-    setTimeout(() => {
-      popupData.element.remove();
-      popups.delete(popupId);
-    }, 3000);
+  if (!popupData) {
+    return;
   }
+
+  popupData.element.classList.remove("loading");
+  popupData.element.textContent = "Request failed. Please retry...";
+
+  setTimeout(() => {
+    popupData.element.remove();
+    popups.delete(popupId);
+  }, 3000);
 }
 
 function handleLLMStreamChunk(popupId, content) {
@@ -114,14 +120,28 @@ function handleLLMStreamChunk(popupId, content) {
 
 function handleLLMStreamClosed(popupId) {
   const popupData = popups.get(popupId);
-  if (popupData) {
-    setTimeout(() => {
-      popupData.element.classList.add("complete");
-      setTimeout(() => {
-        popupData.element.classList.remove("complete");
-      }, 750);
-    }, 250);
+
+  if (!popupData) {
+    return;
   }
+
+  setTimeout(() => {
+    popupData.element.classList.add("complete");
+    setTimeout(() => {
+      popupData.element.classList.remove("complete");
+    }, 750);
+  }, 250);
+}
+
+function removePopup(popupId) {
+  for (const [id, data] of popups) {
+    if (id === popupId) {
+      data.element.remove();
+      break;
+    }
+  }
+
+  popups.delete(popupId);
 }
 
 function removeBranchPopups(popupId) {

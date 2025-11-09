@@ -5,6 +5,8 @@ import { sendMessage } from "./background.js";
 let OPENROUTER_API_KEY;
 let OPENROUTER_MODEL;
 
+export const streamControllers = new Map();
+
 async function loadenv() {
   OPENROUTER_API_KEY = await getEnv("OPENROUTER_API_KEY");
   OPENROUTER_MODEL = await getEnv("OPENROUTER_MODEL");
@@ -15,56 +17,77 @@ export async function invokeLLM(tabId, popupId, userSelectionContext) {
     await loadenv();
   }
 
-  const request = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + OPENROUTER_API_KEY,
-    },
-    body: JSON.stringify({
-      model: OPENROUTER_MODEL,
-      stream: true,
-      messages: [
-        {
-          role: "system",
-          content: [
-            {
-              type: "text",
-              text: systemPrompt,
-            },
-          ],
-        },
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: userSelectionContext,
-            },
-          ],
-        },
-      ],
-      provider: {
-        allow_fallbacks: true,
-        data_collection: "deny",
-        zdr: true,
-        sort: "latency",
-      },
-    }),
-  });
+  const streamController = new AbortController();
+  streamControllers[`${tabId}-${popupId}`] = streamController;
 
-  if (request.status === 200) {
-    sendMessage("LLM_REQUEST_SUCCESS", tabId, popupId, request.status);
-    await processStream(tabId, popupId, request.body);
-  } else {
-    sendMessage("LLM_REQUEST_FAILURE", tabId, popupId, request.status);
+  try {
+    const request = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + OPENROUTER_API_KEY,
+        },
+        body: JSON.stringify({
+          model: OPENROUTER_MODEL,
+          stream: true,
+          messages: [
+            {
+              role: "system",
+              content: [
+                {
+                  type: "text",
+                  text: systemPrompt,
+                },
+              ],
+            },
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: userSelectionContext,
+                },
+              ],
+            },
+          ],
+          provider: {
+            order: ["hyperbolic"],
+            allow_fallbacks: true,
+            data_collection: "deny",
+            zdr: true,
+            sort: "latency",
+          },
+        }),
+        signal: streamController.signal,
+      },
+    );
+
+    if (request.status === 200) {
+      sendMessage("SER_LLM_REQUEST_SUCCESS", tabId, popupId, request.status);
+      await processStream(tabId, popupId, request.body);
+    } else {
+      sendMessage("SER_LLM_REQUEST_FAILURE", tabId, popupId, request.status);
+      delete streamControllers[`${tabId}-${popupId}`];
+    }
+  } catch (error) {
+    if (error.name === "AbortError") {
+      sendMessage("SER_LLM_STREAM_CANCELED", tabId, popupId, null);
+      delete streamControllers[`${tabId}-${popupId}`];
+    }
   }
 }
 
 async function processStream(tabId, popupId, body) {
   const reader = body?.getReader();
   if (!reader) {
-    throw new Error("Response body is not readable");
+    console.error(`Response body is not readable for ${tabId}-${popupId}`);
+
+    sendMessage("SER_LLM_STREAM_CANCELED", tabId, popupId, null);
+    delete streamControllers[`${tabId}-${popupId}`];
+
+    return;
   }
 
   const decoder = new TextDecoder();
@@ -92,14 +115,20 @@ async function processStream(tabId, popupId, body) {
             const parsed = JSON.parse(data);
             const content = parsed.choices[0].delta.content;
             if (content) {
-              sendMessage("LLM_STREAM_CHUNK", tabId, popupId, content);
+              sendMessage("SER_LLM_STREAM_CHUNK", tabId, popupId, content);
             }
           } catch (e) {}
         }
       }
     }
-  } finally {
+
     reader.cancel();
-    sendMessage("LLM_STREAM_CLOSED", tabId, popupId, null);
+    sendMessage("SER_LLM_STREAM_CLOSED", tabId, popupId, null);
+    delete streamControllers[`${tabId}-${popupId}`];
+  } catch (error) {
+    if (error.name === "AbortError") {
+      sendMessage("SER_LLM_STREAM_CANCELED", tabId, popupId, null);
+      delete streamControllers[`${tabId}-${popupId}`];
+    }
   }
 }
