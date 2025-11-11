@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Context Lens",
-  "version": "0.1",
+  "version": "0.1.1",
   "description": "Firefox add-on for AI-powered contextual text explanations. Highlight text and get instant insights via popup.",
   "author": "Iniyan Kanmani",
   "homepage_url": "https://github.com/IniyanKanmani/context-lens-firefox",
