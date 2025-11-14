@@ -31,13 +31,18 @@
       "resources": ["src/popup.css"]
     }
   ],
+  "commands": {
+    "text-generation": {
+      "suggested_key": {
+        "default": "Shift+Alt+G"
+      },
+      "description": "Text Generation"
+    }
+  },
   "browser_specific_settings": {
     "gecko": {
       "id": "{be780688-ddae-4f0b-80ea-9e4eecf409ac}",
-      "strict_min_version": "112.0",
-      "data_collection_permissions": {
-        "required": ["websiteContent"]
-      }
+      "strict_min_version": "112.0"
     }
   }
 }
