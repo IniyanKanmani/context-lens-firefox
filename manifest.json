@@ -28,15 +28,21 @@
   "web_accessible_resources": [
     {
       "matches": ["*://*/*"],
-      "resources": ["src/popup.css"]
+      "resources": ["src/popup.css", "src/icons/send-icon.svg"]
     }
   ],
   "commands": {
-    "text-generation": {
+    "quick-explain": {
       "suggested_key": {
-        "default": "Shift+Alt+G"
+        "default": "Alt+Shift+E"
       },
-      "description": "Text Generation"
+      "description": "Quick Explain"
+    },
+    "contextual-explain": {
+      "suggested_key": {
+        "default": "Alt+Shift+C"
+      },
+      "description": "Explain with Additional Context"
     }
   },
   "browser_specific_settings": {

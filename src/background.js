@@ -1,8 +1,19 @@
-import { streamControllers, invokeLLM } from "./llm_caller.js";
+import {
+  streamControllers,
+  invokeQuickLLM,
+  invokeContextualLLM,
+} from "./llm_caller.js";
 
 browser.runtime.onMessage.addListener(async (message, sender, _) => {
-  if (message.type === "WEB_TEXT_GEN") {
-    await invokeLLM(sender.tab.id, message.popupId, message.content);
+  if (message.type === "WEB_QUICK_EXPLAIN") {
+    await invokeQuickLLM(sender.tab.id, message.popupId, message.selectedText);
+  } else if (message.type === "WEB_CONTEXTUAL_EXPLAIN") {
+    await invokeContextualLLM(
+      sender.tab.id,
+      message.popupId,
+      message.selectedText,
+      message.additionalContext,
+    );
   } else if (message.type === "WEB_CANCEL_STREAM") {
     streamControllers[`${sender.tab.id}-${message.popupId}`].abort();
   }
@@ -15,11 +26,15 @@ browser.commands.onCommand.addListener(async (command) => {
     return;
   }
 
-  if (command === "text-generation") {
-    const tabId = tabs[0]["id"];
+  const tabId = tabs[0]["id"];
 
+  if (command === "quick-explain") {
     browser.tabs.sendMessage(tabId, {
-      type: "SER_TEXT_GEN_KEY_TRIGGERED",
+      type: "SER_QUICK_EXPLAIN_KEY_TRIGGERED",
+    });
+  } else if (command === "contextual-explain") {
+    browser.tabs.sendMessage(tabId, {
+      type: "SER_CONTEXTUAL_EXPLAIN_KEY_TRIGGERED",
     });
   }
 });

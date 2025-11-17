@@ -1,5 +1,8 @@
 import { getEnv } from "./get_env.js";
-import { systemPrompt } from "./prompt.js";
+import {
+  quickExplainSystemPrompt,
+  contextualExplainSystemPrompt,
+} from "./prompt.js";
 import { sendMessage } from "./background.js";
 
 let OPENROUTER_API_KEY;
@@ -12,7 +15,7 @@ async function loadenv() {
   OPENROUTER_MODEL = await getEnv("OPENROUTER_MODEL");
 }
 
-export async function invokeLLM(tabId, popupId, userSelectionContext) {
+export async function invokeQuickLLM(tabId, popupId, selectedText) {
   if (OPENROUTER_API_KEY === undefined || OPENROUTER_MODEL === undefined) {
     await loadenv();
   }
@@ -38,7 +41,7 @@ export async function invokeLLM(tabId, popupId, userSelectionContext) {
               content: [
                 {
                   type: "text",
-                  text: systemPrompt,
+                  text: quickExplainSystemPrompt,
                 },
               ],
             },
@@ -47,13 +50,85 @@ export async function invokeLLM(tabId, popupId, userSelectionContext) {
               content: [
                 {
                   type: "text",
-                  text: userSelectionContext,
+                  text: selectedText,
                 },
               ],
             },
           ],
           provider: {
-            order: ["hyperbolic"],
+            order: ["novita/bf16", "phala"],
+            allow_fallbacks: true,
+            data_collection: "deny",
+            zdr: true,
+            sort: "latency",
+          },
+        }),
+        signal: streamController.signal,
+      },
+    );
+
+    if (request.status === 200) {
+      sendMessage("SER_LLM_REQUEST_SUCCESS", tabId, popupId, request.status);
+      await processStream(tabId, popupId, request.body);
+    } else {
+      sendMessage("SER_LLM_REQUEST_FAILURE", tabId, popupId, request.status);
+      delete streamControllers[`${tabId}-${popupId}`];
+    }
+  } catch (error) {
+    if (error.name === "AbortError") {
+      sendMessage("SER_LLM_STREAM_CANCELED", tabId, popupId, null);
+      delete streamControllers[`${tabId}-${popupId}`];
+    }
+  }
+}
+
+export async function invokeContextualLLM(
+  tabId,
+  popupId,
+  selectedText,
+  additionalContext,
+) {
+  if (OPENROUTER_API_KEY === undefined || OPENROUTER_MODEL === undefined) {
+    await loadenv();
+  }
+
+  const streamController = new AbortController();
+  streamControllers[`${tabId}-${popupId}`] = streamController;
+
+  try {
+    const request = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + OPENROUTER_API_KEY,
+        },
+        body: JSON.stringify({
+          model: OPENROUTER_MODEL,
+          stream: true,
+          messages: [
+            {
+              role: "system",
+              content: [
+                {
+                  type: "text",
+                  text: contextualExplainSystemPrompt,
+                },
+              ],
+            },
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: `Selected Text:\n${selectedText}\n\nAdditional Context:\n${additionalContext}`,
+                },
+              ],
+            },
+          ],
+          provider: {
+            order: ["novita/bf16", "phala"],
             allow_fallbacks: true,
             data_collection: "deny",
             zdr: true,

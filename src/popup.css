@@ -53,3 +53,24 @@
     background-position: 0% -100%;
   }
 }
+
+.context-lens-popup.context-input {
+  min-height: 100px;
+  max-height: 120px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.context-lens-popup.context-input textarea {
+  flex: 1;
+  margin-bottom: 5px;
+}
+
+.context-lens-popup.context-input button {
+  align-self: flex-end;
+}
+
+.context-lens-popup.context-input button:hover {
+  background: #555;
+}
