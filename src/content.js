@@ -53,22 +53,20 @@ function handleTextExplainTrigger(type) {
     return;
   }
 
-  const textSelection = document.getSelection();
+  const selection = window.getSelection();
 
-  if (!textSelection || textSelection.toString().trim() === "") {
+  if (!selection || selection.toString().trim() === "") {
     return;
   }
 
-  const range = textSelection.getRangeAt(0);
-  const rect = range.getBoundingClientRect();
-
   const popupId = ++popupCounter;
-  const selectedText = textSelection.toString().trim();
+  const range = selection.getRangeAt(0);
+  const selectedText = selection.toString().trim();
 
   if (type === "quick-explain") {
-    createQuickExplainPopup(popupId, rect, selectedText);
+    createQuickExplainPopup(popupId, range, selectedText);
   } else if (type === "contextual-explain") {
-    createContextualExplainPopup(popupId, rect, selectedText);
+    createContextualExplainPopup(popupId, range, selectedText);
   }
 }
 

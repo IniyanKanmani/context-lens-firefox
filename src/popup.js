@@ -6,11 +6,12 @@ document.head.appendChild(link);
 let popupCounter = 0;
 const popups = new Map();
 
-function createQuickExplainPopup(popupId, rect, selectedText) {
+function createQuickExplainPopup(popupId, range, selectedText) {
   const popup = document.createElement("div");
   popup.className = "context-lens-popup";
   popup.id = `popup-${popupId}`;
 
+  const rect = range.getBoundingClientRect();
   let noPageVSpace = false;
 
   // Vertical Calculation
@@ -75,11 +76,12 @@ function createQuickExplainPopup(popupId, rect, selectedText) {
   sendMessage("WEB_QUICK_EXPLAIN", popupId, selectedText);
 }
 
-function createContextualExplainPopup(popupId, rect, selectedText) {
+function createContextualExplainPopup(popupId, range, selectedText) {
   const popup = document.createElement("div");
   popup.className = "context-lens-popup context-input";
   popup.id = `popup-${popupId}`;
 
+  const rect = range.getBoundingClientRect();
   let noPageVSpace = false;
 
   // Vertical Calculation
@@ -152,7 +154,11 @@ function createContextualExplainPopup(popupId, rect, selectedText) {
 
   setTimeout(() => {
     textarea.focus();
-    textarea.setSelectionRange(0, 0);
+    textarea.setSelectionRange(null, null);
+
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
   }, 100);
 
   const sendContext = () => {
