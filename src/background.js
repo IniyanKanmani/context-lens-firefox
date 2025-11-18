@@ -2,7 +2,7 @@ import {
   streamControllers,
   invokeQuickLLM,
   invokeContextualLLM,
-} from "./llm_caller.js";
+} from "./model_invoker.js";
 
 browser.runtime.onMessage.addListener(async (message, sender, _) => {
   if (message.type === "WEB_QUICK_EXPLAIN") {

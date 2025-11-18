@@ -1,30 +1,25 @@
-let isProcessingRequest = false;
-
 browser.runtime.onMessage.addListener((message, _, __) => {
   if (message.type === "SER_QUICK_EXPLAIN_KEY_TRIGGERED") {
-    handleQuickExplainTrigger();
+    handleTextExplainTrigger("quick-explain");
   } else if (message.type === "SER_CONTEXTUAL_EXPLAIN_KEY_TRIGGERED") {
-    handleContextualExplainTrigger();
+    handleTextExplainTrigger("contextual-explain");
   } else if (message.type === "SER_LLM_REQUEST_SUCCESS") {
     handleLLMRequestSuccess(message.popupId);
   } else if (message.type === "SER_LLM_REQUEST_FAILURE") {
     handleLLMRequestFailure(message.popupId);
-    isProcessingRequest = false;
   } else if (message.type === "SER_LLM_STREAM_CHUNK") {
     handleLLMStreamChunk(message.popupId, message.content);
   } else if (message.type === "SER_LLM_STREAM_CANCELED") {
     removePopup(message.popupId);
-    isProcessingRequest = false;
   } else if (message.type === "SER_LLM_STREAM_CLOSED") {
     handleLLMStreamClosed(message.popupId);
-    isProcessingRequest = false;
   }
 });
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
-    if (isProcessingRequest) {
-      sendMessage("WEB_CANCEL_STREAM", popupCounter, null);
+    if (isLastRequestBeingProcessed()) {
+      cancelOrCloseLastPopup();
     } else {
       removeAllPopups();
     }
@@ -37,56 +32,74 @@ document.addEventListener("mousedown", (event) => {
   const elementId = clickedElement.id;
 
   if (!isInsidePopup) {
-    if (isProcessingRequest) {
-      sendMessage("WEB_CANCEL_STREAM", popupCounter, null);
+    if (isLastRequestBeingProcessed()) {
+      cancelOrCloseLastPopup();
     }
 
     removeAllPopups();
   } else if (elementId.startsWith("popup-")) {
     const popupId = parseInt(elementId.split("-")[1]);
 
-    if (popupId !== popupCounter && isProcessingRequest) {
-      sendMessage("WEB_CANCEL_STREAM", popupCounter, null);
+    if (popupId !== popupCounter && isLastRequestBeingProcessed()) {
+      cancelOrCloseLastPopup();
     }
 
     removeBranchPopups(popupId);
   }
 });
 
-function handleQuickExplainTrigger() {
-  if (!isProcessingRequest) {
-    const textSelection = document.getSelection();
+function handleTextExplainTrigger(type) {
+  if (isLastRequestBeingProcessed()) {
+    return;
+  }
 
-    if (textSelection && textSelection.toString().trim() !== "") {
-      const range = textSelection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
+  const textSelection = document.getSelection();
 
-      const popupId = ++popupCounter;
-      createQuickExplainPopup(popupId, rect);
+  if (!textSelection || textSelection.toString().trim() === "") {
+    return;
+  }
 
-      isProcessingRequest = true;
-      sendMessage(
-        "WEB_QUICK_EXPLAIN",
-        popupId,
-        textSelection.toString().trim(),
-      );
-    }
+  const range = textSelection.getRangeAt(0);
+  const rect = range.getBoundingClientRect();
+
+  const popupId = ++popupCounter;
+  const selectedText = textSelection.toString().trim();
+
+  if (type === "quick-explain") {
+    createQuickExplainPopup(popupId, rect, selectedText);
+  } else if (type === "contextual-explain") {
+    createContextualExplainPopup(popupId, rect, selectedText);
   }
 }
 
-function handleContextualExplainTrigger() {
-  if (!isProcessingRequest) {
-    const textSelection = document.getSelection();
+function isLastRequestBeingProcessed() {
+  const popup = popups.get(popupCounter);
 
-    if (textSelection && textSelection.toString().trim() !== "") {
-      const range = textSelection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
+  if (!popup) {
+    return false;
+  }
 
-      const popupId = ++popupCounter;
-      const selectedText = textSelection.toString().trim();
-      createContextualExplainPopup(popupId, rect, selectedText);
+  return popup.isBeingProcessed;
+}
 
-      isProcessingRequest = true;
+function cancelOrCloseLastPopup() {
+  const popup = popups.get(popupCounter);
+
+  if (!popup) {
+    return;
+  }
+
+  if (!popup.isBeingProcessed) {
+    return;
+  }
+
+  if (popup.type === "quick-explain") {
+    sendMessage("WEB_CANCEL_STREAM", popupCounter, null, null);
+  } else if (popup.type === "contextual-explain") {
+    if (!popup.gotContextInput) {
+      removePopup(popupCounter);
+    } else {
+      sendMessage("WEB_CANCEL_STREAM", popupCounter, null, null);
     }
   }
 }

@@ -6,7 +6,7 @@ document.head.appendChild(link);
 let popupCounter = 0;
 const popups = new Map();
 
-function createQuickExplainPopup(popupId, rect) {
+function createQuickExplainPopup(popupId, rect, selectedText) {
   const popup = document.createElement("div");
   popup.className = "context-lens-popup";
   popup.id = `popup-${popupId}`;
@@ -63,96 +63,16 @@ function createQuickExplainPopup(popupId, rect) {
   popup.classList.add("loading");
   popup.textContent = "Fetching...";
   document.body.appendChild(popup);
+
   popups.set(popupId, {
     element: popup,
+    type: "quick-explain",
     content: "",
+    isBeingProcessed: true,
     hasReceivedFirstToken: false,
   });
-}
 
-function handleLLMRequestSuccess(popupId) {
-  const popupData = popups.get(popupId);
-
-  if (!popupData) {
-    return;
-  }
-
-  popupData.element.textContent = "Generating...";
-}
-
-function handleLLMRequestFailure(popupId) {
-  const popupData = popups.get(popupId);
-
-  if (!popupData) {
-    return;
-  }
-
-  popupData.element.classList.remove("loading");
-  popupData.element.textContent = "Request failed. Please retry...";
-
-  setTimeout(() => {
-    popupData.element.remove();
-    popups.delete(popupId);
-  }, 3000);
-}
-
-function handleLLMStreamChunk(popupId, content) {
-  const popupData = popups.get(popupId);
-
-  if (!popupData) {
-    return;
-  }
-
-  if (!popupData.hasReceivedFirstToken && content.includes("\n")) {
-    return;
-  }
-
-  if (!popupData.hasReceivedFirstToken) {
-    popupData.element.classList.remove("loading");
-    popupData.hasReceivedFirstToken = true;
-  }
-
-  popupData.content += content;
-  popupData.element.textContent = popupData.content;
-}
-
-function handleLLMStreamClosed(popupId) {
-  const popupData = popups.get(popupId);
-
-  if (!popupData) {
-    return;
-  }
-
-  setTimeout(() => {
-    popupData.element.classList.add("complete");
-    setTimeout(() => {
-      popupData.element.classList.remove("complete");
-    }, 750);
-  }, 250);
-}
-
-function removePopup(popupId) {
-  for (const [id, data] of popups) {
-    if (id === popupId) {
-      data.element.remove();
-      break;
-    }
-  }
-
-  popups.delete(popupId);
-}
-
-function removeBranchPopups(popupId) {
-  let idToRemove = [];
-
-  for (const [id, data] of popups) {
-    if (id > popupId) {
-      idToRemove.push(id);
-      data.element.remove();
-    }
-  }
-
-  idToRemove.forEach((id) => popups.delete(id));
+  sendMessage("WEB_QUICK_EXPLAIN", popupId, selectedText);
 }
 
 function createContextualExplainPopup(popupId, rect, selectedText) {
@@ -221,6 +141,15 @@ function createContextualExplainPopup(popupId, rect, selectedText) {
   popup.appendChild(button);
   document.body.appendChild(popup);
 
+  popups.set(popupId, {
+    element: popup,
+    type: "contextual-explain",
+    content: "",
+    isBeingProcessed: true,
+    gotContextInput: false,
+    hasReceivedFirstToken: false,
+  });
+
   setTimeout(() => {
     textarea.focus();
     textarea.setSelectionRange(0, 0);
@@ -229,25 +158,29 @@ function createContextualExplainPopup(popupId, rect, selectedText) {
   const sendContext = () => {
     const additionalContext = textarea.value.trim();
 
-    if (additionalContext) {
-      popups.set(popupId, {
-        element: popup,
-        content: "",
-        hasReceivedFirstToken: false,
-      });
-
-      sendMessage(
-        "WEB_CONTEXTUAL_EXPLAIN",
-        popupId,
-        selectedText,
-        additionalContext,
-      );
-
-      popup.innerHTML = "";
-      popup.classList.remove("context-input");
-      popup.classList.add("loading");
-      popup.textContent = "Fetching...";
+    if (!additionalContext) {
+      return;
     }
+
+    const popupData = popups.get(popupCounter);
+
+    if (!popupData) {
+      return;
+    }
+
+    popupData.gotContextInput = true;
+
+    sendMessage(
+      "WEB_CONTEXTUAL_EXPLAIN",
+      popupId,
+      selectedText,
+      additionalContext,
+    );
+
+    popup.innerHTML = "";
+    popup.classList.remove("context-input");
+    popup.classList.add("loading");
+    popup.textContent = "Fetching...";
   };
 
   button.addEventListener("click", sendContext);
@@ -257,6 +190,31 @@ function createContextualExplainPopup(popupId, rect, selectedText) {
       sendContext();
     }
   });
+}
+
+function removePopup(popupId) {
+  const popup = popups.get(popupId);
+
+  if (popup) {
+    popup.element.remove();
+
+    popups.delete(popupId);
+    popupCounter = popupId;
+  }
+}
+
+function removeBranchPopups(popupId) {
+  let idToRemove = [];
+
+  for (const [id, data] of popups) {
+    if (id > popupId) {
+      idToRemove.push(id);
+      data.element.remove();
+    }
+  }
+
+  idToRemove.forEach((id) => popups.delete(id));
+  popupCounter = popupId;
 }
 
 function removeAllPopups() {
