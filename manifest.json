@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Context Lens",
-  "version": "0.1.1",
-  "description": "Firefox add-on for AI-powered contextual text explanations. Highlight text and get instant insights via popup.",
+  "version": "0.2",
+  "description": "Firefox add-on for AI-powered contextual text explanations. Just select text, hit keybind and get insights on popup in same tab",
   "author": "Iniyan Kanmani",
   "homepage_url": "https://github.com/IniyanKanmani/context-lens-firefox",
   "icons": {
@@ -33,16 +33,16 @@
   ],
   "commands": {
     "quick-explain": {
+      "description": "Quick Explain",
       "suggested_key": {
-        "default": "Alt+Shift+E"
-      },
-      "description": "Quick Explain"
+        "default": "Shift+Alt+E"
+      }
     },
     "contextual-explain": {
+      "description": "Explain with Additional Context",
       "suggested_key": {
-        "default": "Alt+Shift+C"
-      },
-      "description": "Explain with Additional Context"
+        "default": "Shift+Alt+C"
+      }
     }
   },
   "browser_specific_settings": {
