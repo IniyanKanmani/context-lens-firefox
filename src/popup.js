@@ -164,7 +164,7 @@ function createContextualExplainPopup(popupId, rect, selectedText) {
 
   // Vertical Calculation
   let top;
-  const estimatedHeight = 120; // Increased height for input
+  const estimatedHeight = 80;
   const spaceAbove = rect.top;
   const spaceBetweenV = rect.bottom - rect.top;
   const spaceBelow = window.innerHeight - rect.bottom;
@@ -211,37 +211,20 @@ function createContextualExplainPopup(popupId, rect, selectedText) {
 
   const textarea = document.createElement("textarea");
   textarea.placeholder = "Additional context...";
-  textarea.style.width = "100%";
-  textarea.style.height = "60px";
-  textarea.style.background = "#333";
-  textarea.style.color = "white";
-  textarea.style.border = "1px solid #666";
-  textarea.style.borderRadius = "5px";
-  textarea.style.padding = "5px";
-  textarea.style.fontFamily = "sans-serif";
-  textarea.style.fontSize = "14px";
-  textarea.style.resize = "none";
-  textarea.style.outline = "none";
 
   const button = document.createElement("button");
   const img = document.createElement("img");
   img.src = browser.runtime.getURL("src/icons/send-icon.svg");
-  img.style.width = "20px";
-  img.style.height = "20px";
   button.appendChild(img);
-  button.style.background = "#444";
-  button.style.border = "none";
-  button.style.borderRadius = "5px";
-  button.style.padding = "5px";
-  button.style.cursor = "pointer";
-  button.style.marginTop = "5px";
-  button.style.float = "right";
 
   popup.appendChild(textarea);
   popup.appendChild(button);
   document.body.appendChild(popup);
 
-  textarea.focus();
+  setTimeout(() => {
+    textarea.focus();
+    textarea.setSelectionRange(0, 0);
+  }, 100);
 
   const sendContext = () => {
     const additionalContext = textarea.value.trim();

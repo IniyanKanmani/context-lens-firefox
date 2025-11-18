@@ -55,20 +55,51 @@
 }
 
 .context-lens-popup.context-input {
-  min-height: 100px;
-  max-height: 120px;
-  padding: 10px;
+  min-height: 50px;
+  padding: 5px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: flex-start;
 }
 
 .context-lens-popup.context-input textarea {
   flex: 1;
-  margin-bottom: 5px;
+  width: 100%;
+  min-height: 1.2em;
+  background: #333;
+  color: white;
+  border: 1px solid #666;
+  border-radius: 5px;
+  padding: 5px;
+  font-family: sans-serif;
+  font-size: 14px;
+  line-height: 1.2em;
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+  overflow-y: auto;
+  margin-right: 30px;
 }
 
 .context-lens-popup.context-input button {
-  align-self: flex-end;
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background: #444;
+  border: none;
+  border-radius: 5px;
+  padding: 0;
+  cursor: pointer;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.context-lens-popup.context-input button img {
+  width: 18px;
+  height: 18px;
 }
 
 .context-lens-popup.context-input button:hover {
