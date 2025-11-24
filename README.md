@@ -2,12 +2,12 @@
 
 **ContextLens** is a Firefox Addon designed to bring contextual AI assistance directly to your browser.
 
-Simply highlight any text on a webpage, use the keyboard shortcut (default: Alt+Shift), and ContextLens will display a insightful reply, helping you understand or summarize on the highlighted content without leaving your current tab in a popup.
+Simply highlight any text on a webpage, use Shift+Alt+E for instant explanation or Shift+Alt+C for contextual explanation with additional input, and ContextLens will display an insightful reply, helping you understand or summarize the highlighted content without leaving your current tab in a popup.
 
 ## Usage
 
 - Highlight text on any webpage.
-- Use the configured keyboard shortcut (default: Alt+Shift) to get AI assistance.
+- Press Shift+Alt+E for a quick AI explanation or Shift+Alt+C to provide additional context before getting the AI response.
 - A popup will display the AI response without leaving the page.
 
 ## Dev Installation
@@ -36,8 +36,8 @@ This extension sends highlighted text to [OpenRouter](https://openrouter.ai) for
 
 ## Future Plans
 
-- [ ] **Customizable Keyboard Shortcuts**: Allow users to set their preferred key combination to trigger the extension.
-- [ ] **Additional Context Input**: Include a text field for users to provide extra context beyond the selected text.
+- [x] **Customizable Keyboard Shortcuts**: Allow users to set their preferred key combination to trigger the extension.
+- [x] **Additional Context Input**: Include a text field for users to provide extra context beyond the selected text.
 - [ ] **Screenshot Integration**: Enable capturing and using webpage screenshots as supplementary context for AI queries.
 
 ## Contributing
