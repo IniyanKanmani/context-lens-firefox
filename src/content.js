@@ -3,6 +3,8 @@ browser.runtime.onMessage.addListener((message, _, __) => {
     handleTextExplainTrigger("quick-explain");
   } else if (message.type === "SER_CONTEXTUAL_EXPLAIN_KEY_TRIGGERED") {
     handleTextExplainTrigger("contextual-explain");
+  } else if (message.type === "SER_VISUAL_EXPLAIN_KEY_TRIGGERED") {
+    handleVisualExplainTrigger("visual-explain", message.imageUri);
   } else if (message.type === "SER_LLM_REQUEST_SUCCESS") {
     handleLLMRequestSuccess(message.popupId);
   } else if (message.type === "SER_LLM_REQUEST_FAILURE") {
@@ -70,6 +72,18 @@ function handleTextExplainTrigger(type) {
   }
 }
 
+async function handleVisualExplainTrigger(type, imageUri) {
+  if (isLastRequestBeingProcessed()) {
+    return;
+  }
+
+  const popupId = ++popupCounter;
+
+  if (type == "visual-explain") {
+    createVisualExplainPopup(popupId, imageUri);
+  }
+}
+
 function isLastRequestBeingProcessed() {
   const popup = popups.get(popupCounter);
 
@@ -99,6 +113,8 @@ function cancelOrCloseLastPopup() {
     } else {
       sendMessage("WEB_CANCEL_STREAM", popupCounter, null, null);
     }
+  } else if (popup.type === "visual-explain") {
+    removePopup(popupCounter);
   }
 }
 

@@ -198,11 +198,61 @@ function createContextualExplainPopup(popupId, range, selectedText) {
   });
 }
 
+function createVisualExplainPopup(popupId, imageUri) {
+  const prevBodyOverflow = document.body.style.overflow;
+
+  const backdrop = document.createElement("div");
+  backdrop.className = "visual-backdrop";
+  document.body.appendChild(backdrop);
+
+  const popup = document.createElement("div");
+  popup.className = "context-lens-popup visual";
+  popup.id = `popup-${popupId}`;
+
+  const img = document.createElement("img");
+  img.src = imageUri;
+  img.alt = "Screenshot";
+
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "context-lens-popup visual close-btn";
+  closeBtn.textContent = "×";
+  closeBtn.addEventListener("click", () => removePopup(popupId));
+
+  popup.appendChild(img);
+
+  document.body.appendChild(popup);
+  document.body.appendChild(closeBtn);
+
+  document.body.style.overflow = "hidden";
+
+  popups.set(popupId, {
+    element: popup,
+    type: "visual-explain",
+    isBeingProcessed: false,
+    prevBodyOverflow: prevBodyOverflow,
+    backdrop: backdrop,
+    closeBtn: closeBtn,
+    isBeingProcessed: true,
+  });
+}
+
 function removePopup(popupId) {
   const popup = popups.get(popupId);
 
   if (popup) {
+    if (popup.closeBtn) {
+      popup.closeBtn.remove();
+    }
+
     popup.element.remove();
+
+    if (popup.backdrop) {
+      popup.backdrop.remove();
+    }
+
+    if (popup.type === "visual-explain") {
+      document.body.style.overflow = popup.prevBodyOverflow;
+    }
 
     popups.delete(popupId);
     popupCounter = popupId;
@@ -224,8 +274,20 @@ function removeBranchPopups(popupId) {
 }
 
 function removeAllPopups() {
-  for (const [_, data] of popups) {
-    data.element.remove();
+  for (const [_, popup] of popups) {
+    if (popup.closeBtn) {
+      popup.closeBtn.remove();
+    }
+
+    popup.element.remove();
+
+    if (popup.backdrop) {
+      popup.backdrop.remove();
+    }
+
+    if (popup.type === "visual-explain") {
+      document.body.style.overflow = popup.prevBodyOverflow;
+    }
   }
 
   popups.clear();

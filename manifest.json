@@ -10,6 +10,7 @@
     "96": "src/icons/icon-96.png",
     "128": "src/icons/icon-128.png"
   },
+  "permissions": ["activeTab"],
   "background": {
     "scripts": [
       "src/background.js",
@@ -35,13 +36,19 @@
     "quick-explain": {
       "description": "Quick Explain",
       "suggested_key": {
-        "default": "Shift+Alt+E"
+        "default": "Shift+Alt+Q"
       }
     },
     "contextual-explain": {
       "description": "Explain with Additional Context",
       "suggested_key": {
         "default": "Shift+Alt+C"
+      }
+    },
+    "visual-explain": {
+      "description": "Explain from Visual Context",
+      "suggested_key": {
+        "default": "Shift+Alt+I"
       }
     }
   },

@@ -36,6 +36,13 @@ browser.commands.onCommand.addListener(async (command) => {
     browser.tabs.sendMessage(tabId, {
       type: "SER_CONTEXTUAL_EXPLAIN_KEY_TRIGGERED",
     });
+  } else if (command === "visual-explain") {
+    const imageUri = await browser.tabs.captureVisibleTab();
+
+    browser.tabs.sendMessage(tabId, {
+      type: "SER_VISUAL_EXPLAIN_KEY_TRIGGERED",
+      imageUri: imageUri,
+    });
   }
 });
 
