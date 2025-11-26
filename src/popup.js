@@ -211,16 +211,14 @@ function createVisualExplainPopup(popupId, imageUri) {
 
   const img = document.createElement("img");
   img.src = imageUri;
-  img.alt = "Screenshot";
+  img.alt = "tab-screen-shot";
+  popup.appendChild(img);
+  document.body.appendChild(popup);
 
   const closeBtn = document.createElement("button");
   closeBtn.className = "context-lens-popup visual close-btn";
   closeBtn.textContent = "×";
   closeBtn.addEventListener("click", () => removePopup(popupId));
-
-  popup.appendChild(img);
-
-  document.body.appendChild(popup);
   document.body.appendChild(closeBtn);
 
   document.body.style.overflow = "hidden";
@@ -228,18 +226,136 @@ function createVisualExplainPopup(popupId, imageUri) {
   popups.set(popupId, {
     element: popup,
     type: "visual-explain",
-    isBeingProcessed: false,
+    isBeingProcessed: true,
+    isMouseDown: false,
+    selectionRect: null,
     prevBodyOverflow: prevBodyOverflow,
     backdrop: backdrop,
     closeBtn: closeBtn,
-    isBeingProcessed: true,
   });
+}
+
+function drawVisualSelectionPath(popupId, initialX, initialY) {
+  const popup = popups.get(popupId);
+
+  if (!popup) {
+    return;
+  }
+
+  popup.isMouseDown = true;
+  popup.selectionRect = [initialX, initialY, initialX, initialY];
+
+  const selectionRect = popup.selectionRect;
+  const [x1, y1, x2, y2] = selectionRect;
+
+  const left = Math.min(x1, x2);
+  const top = Math.min(y1, y2);
+  const width = Math.abs(x2 - x1);
+  const height = Math.abs(y2 - y1);
+
+  popup.selectionDiv = document.createElement("div");
+  popup.selectionDiv.className = "context-lens-popup visual selection-rect";
+  popup.element.appendChild(popup.selectionDiv);
+
+  const popupRect = popup.element.getBoundingClientRect();
+  const relativeTop = top - popupRect.top;
+  const relativeLeft = left - popupRect.left;
+
+  popup.selectionDiv.style.top = relativeTop + "px";
+  popup.selectionDiv.style.left = relativeLeft + "px";
+  popup.selectionDiv.style.width = width + "px";
+  popup.selectionDiv.style.height = height + "px";
+}
+
+function updateVisualSelectionPath(popupId, currentX, currentY) {
+  const popup = popups.get(popupId);
+
+  if (!popup) {
+    return;
+  }
+
+  popup.selectionRect[2] = currentX;
+  popup.selectionRect[3] = currentY;
+
+  const selectionRect = popup.selectionRect;
+  const [x1, y1, x2, y2] = selectionRect;
+
+  const left = Math.min(x1, x2);
+  const top = Math.min(y1, y2);
+  const width = Math.abs(x2 - x1);
+  const height = Math.abs(y2 - y1);
+
+  const popupRect = popup.element.getBoundingClientRect();
+  const relativeTop = top - popupRect.top;
+  const relativeLeft = left - popupRect.left;
+
+  popup.selectionDiv.style.top = relativeTop + "px";
+  popup.selectionDiv.style.left = relativeLeft + "px";
+  popup.selectionDiv.style.width = width + "px";
+  popup.selectionDiv.style.height = height + "px";
+}
+
+function stopVisualSelectionPath(popupId, currentX, currentY) {
+  const popup = popups.get(popupId);
+
+  if (!popup) {
+    return;
+  }
+
+  popup.isMouseDown = false;
+  popup.selectionRect[2] = currentX;
+  popup.selectionRect[3] = currentY;
+
+  const selectionRect = popup.selectionRect;
+  const [x1, y1, x2, y2] = selectionRect;
+
+  const left = Math.min(x1, x2);
+  const top = Math.min(y1, y2);
+  const width = Math.abs(x2 - x1);
+  const height = Math.abs(y2 - y1);
+
+  const popupRect = popup.element.getBoundingClientRect();
+  const relativeTop = top - popupRect.top;
+  const relativeLeft = left - popupRect.left;
+
+  popup.selectionDiv.style.top = relativeTop + "px";
+  popup.selectionDiv.style.left = relativeLeft + "px";
+  popup.selectionDiv.style.width = width + "px";
+  popup.selectionDiv.style.height = height + "px";
+}
+
+function removeVisualSelectionPath(popupId) {
+  const popup = popups.get(popupId);
+
+  if (!popup) {
+    return;
+  }
+
+  popup.selectionRect = null;
+
+  if (popup.selectionDiv) {
+    popup.selectionDiv.remove();
+  }
+}
+
+function visualPopupMetriesConvert(dim, value) {
+  if (dim === "w") {
+    return value - (window.innerWidth * 5) / 100 - 3;
+  } else if (dim === "h") {
+    return value - (window.innerHeight * 5) / 100 - 3;
+  }
+
+  return value;
 }
 
 function removePopup(popupId) {
   const popup = popups.get(popupId);
 
   if (popup) {
+    if (popup.selectionDiv) {
+      popup.selectionDiv.remove();
+    }
+
     if (popup.closeBtn) {
       popup.closeBtn.remove();
     }
@@ -275,6 +391,10 @@ function removeBranchPopups(popupId) {
 
 function removeAllPopups() {
   for (const [_, popup] of popups) {
+    if (popup.selectionDiv) {
+      popup.selectionDiv.remove();
+    }
+
     if (popup.closeBtn) {
       popup.closeBtn.remove();
     }

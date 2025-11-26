@@ -39,7 +39,7 @@ document.addEventListener("mousedown", (event) => {
     }
 
     removeAllPopups();
-  } else if (elementId.startsWith("popup-")) {
+  } else if (!isLastAVisualPopup() && elementId.startsWith("popup-")) {
     const popupId = parseInt(elementId.split("-")[1]);
 
     if (popupId !== popupCounter && isLastRequestBeingProcessed()) {
@@ -47,6 +47,30 @@ document.addEventListener("mousedown", (event) => {
     }
 
     removeBranchPopups(popupId);
+  } else if (isLastAVisualPopup()) {
+    if (isLastRequestBeingProcessed() && !isMouseDownOnVisualPopup()) {
+      drawVisualSelectionPath(popupCounter, event.clientX, event.clientY);
+    }
+  }
+});
+
+document.addEventListener("mousemove", (event) => {
+  if (
+    isLastRequestBeingProcessed() &&
+    isLastAVisualPopup() &&
+    isMouseDownOnVisualPopup()
+  ) {
+    updateVisualSelectionPath(popupCounter, event.clientX, event.clientY);
+  }
+});
+
+document.addEventListener("mouseup", (event) => {
+  if (
+    isLastRequestBeingProcessed() &&
+    isLastAVisualPopup() &&
+    isMouseDownOnVisualPopup()
+  ) {
+    stopVisualSelectionPath(popupCounter, event.clientX, event.clientY);
   }
 });
 
@@ -79,9 +103,33 @@ async function handleVisualExplainTrigger(type, imageUri) {
 
   const popupId = ++popupCounter;
 
-  if (type == "visual-explain") {
+  if (type === "visual-explain") {
     createVisualExplainPopup(popupId, imageUri);
   }
+}
+
+function isLastAVisualPopup() {
+  const popup = popups.get(popupCounter);
+
+  if (!popup) {
+    return false;
+  }
+
+  return popup.type === "visual-explain";
+}
+
+function isMouseDownOnVisualPopup() {
+  const popup = popups.get(popupCounter);
+
+  if (!popup) {
+    return false;
+  }
+
+  if (!isLastAVisualPopup()) {
+    return false;
+  }
+
+  return popup.isMouseDown;
 }
 
 function isLastRequestBeingProcessed() {
