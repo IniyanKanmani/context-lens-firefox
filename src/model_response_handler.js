@@ -1,62 +1,64 @@
 function handleLLMRequestSuccess(popupId) {
-  const popupData = popups.get(popupId);
+  const popup = popups.get(popupId);
 
-  if (!popupData) {
+  if (!popup) {
     return;
   }
 
-  popupData.element.textContent = "Generating...";
+  popup.element.textContent = "Generating...";
 }
 
 function handleLLMRequestFailure(popupId) {
-  const popupData = popups.get(popupId);
+  const popup = popups.get(popupId);
 
-  if (!popupData) {
+  if (!popup) {
     return;
   }
 
-  popupData.element.classList.remove("loading");
-  popupData.element.textContent = "Request failed. Please retry...";
+  popup.element.classList.remove("loading");
+  popup.element.textContent = "Request failed. Please retry...";
 
   setTimeout(() => {
-    popupData.element.remove();
+    popup.remove();
+    popup.isBeingProcessed = false;
     popups.delete(popupId);
-    popupData.isBeingProcessed = false;
   }, 3000);
 }
 
 function handleLLMStreamChunk(popupId, content) {
-  const popupData = popups.get(popupId);
+  const popup = popups.get(popupId);
 
-  if (!popupData) {
+  if (!popup) {
     return;
   }
 
-  if (!popupData.hasReceivedFirstToken && content.includes("\n")) {
+  if (!popup.hasReceivedFirstToken && content.includes("\n")) {
     return;
   }
 
-  if (!popupData.hasReceivedFirstToken) {
-    popupData.element.classList.remove("loading");
-    popupData.hasReceivedFirstToken = true;
+  if (!popup.hasReceivedFirstToken) {
+    popup.element.classList.remove("loading");
+    popup.hasReceivedFirstToken = true;
+    popup.content = "";
   }
 
-  popupData.content += content;
-  popupData.element.textContent = popupData.content;
+  popup.content += content;
+  popup.element.textContent = popup.content;
 }
 
 function handleLLMStreamClosed(popupId) {
-  const popupData = popups.get(popupId);
+  const popup = popups.get(popupId);
 
-  if (!popupData) {
+  if (!popup) {
     return;
   }
 
   setTimeout(() => {
-    popupData.element.classList.add("complete");
+    popup.element.classList.add("complete");
+
     setTimeout(() => {
-      popupData.element.classList.remove("complete");
-      popupData.isBeingProcessed = false;
+      popup.element.classList.remove("complete");
+      popup.isBeingProcessed = false;
     }, 750);
   }, 250);
 }

@@ -23,7 +23,14 @@
   "content_scripts": [
     {
       "matches": ["*://*/*"],
-      "js": ["src/content.js", "src/popup.js", "src/model_response_handler.js"]
+      "js": [
+        "src/content.js",
+        "src/popup.js",
+        "src/quick_explain_popup.js",
+        "src/contextual_explain_popup.js",
+        "src/visual_explain_popup.js",
+        "src/model_response_handler.js"
+      ]
     }
   ],
   "web_accessible_resources": [

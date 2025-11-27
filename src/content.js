@@ -20,7 +20,13 @@ browser.runtime.onMessage.addListener((message, _, __) => {
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
-    if (isLastRequestBeingProcessed()) {
+    const lastPopup = popups.get(popupCounter);
+
+    if (!lastPopup) {
+      return;
+    }
+
+    if (lastPopup.isBeingProcessed) {
       cancelOrCloseLastPopup();
     } else {
       removeAllPopups();
@@ -33,49 +39,79 @@ document.addEventListener("mousedown", (event) => {
   const isInsidePopup = clickedElement.closest(".context-lens-popup");
   const elementId = clickedElement.id;
 
+  const lastPopup = popups.get(popupCounter);
+
+  if (!lastPopup) {
+    return;
+  }
+
   if (!isInsidePopup) {
-    if (isLastRequestBeingProcessed()) {
+    if (lastPopup.isBeingProcessed) {
       cancelOrCloseLastPopup();
     }
 
     removeAllPopups();
-  } else if (!isLastAVisualPopup() && elementId.startsWith("popup-")) {
+
+    return;
+  }
+
+  if (lastPopup.type !== "visual-explain") {
     const popupId = parseInt(elementId.split("-")[1]);
 
-    if (popupId !== popupCounter && isLastRequestBeingProcessed()) {
+    if (popupId !== popupCounter && lastPopup.isBeingProcessed) {
       cancelOrCloseLastPopup();
     }
 
     removeBranchPopups(popupId);
-  } else if (isLastAVisualPopup()) {
-    if (isLastRequestBeingProcessed() && !isMouseDownOnVisualPopup()) {
-      drawVisualSelectionPath(popupCounter, event.clientX, event.clientY);
-    }
+
+    return;
+  }
+
+  if (
+    lastPopup.isBeingProcessed &&
+    !lastPopup.isSelectionMade &&
+    !lastPopup.isMouseDown
+  ) {
+    lastPopup.startVisualSelection(event.clientX, event.clientY);
   }
 });
 
 document.addEventListener("mousemove", (event) => {
+  const lastPopup = popups.get(popupCounter);
+
+  if (!lastPopup) {
+    return;
+  }
+
   if (
-    isLastRequestBeingProcessed() &&
-    isLastAVisualPopup() &&
-    isMouseDownOnVisualPopup()
+    lastPopup.type === "visual-explain" &&
+    lastPopup.isBeingProcessed &&
+    lastPopup.isMouseDown
   ) {
-    updateVisualSelectionPath(popupCounter, event.clientX, event.clientY);
+    lastPopup.updateVisualSelection(event.clientX, event.clientY);
   }
 });
 
 document.addEventListener("mouseup", (event) => {
+  const lastPopup = popups.get(popupCounter);
+
+  if (!lastPopup) {
+    return;
+  }
+
   if (
-    isLastRequestBeingProcessed() &&
-    isLastAVisualPopup() &&
-    isMouseDownOnVisualPopup()
+    lastPopup.type === "visual-explain" &&
+    lastPopup.isBeingProcessed &&
+    lastPopup.isMouseDown
   ) {
-    stopVisualSelectionPath(popupCounter, event.clientX, event.clientY);
+    lastPopup.stopVisualSelection(event.clientX, event.clientY);
   }
 });
 
 function handleTextExplainTrigger(type) {
-  if (isLastRequestBeingProcessed()) {
+  const lastPopup = popups.get(popupCounter);
+
+  if (lastPopup && lastPopup.isBeingProcessed) {
     return;
   }
 
@@ -90,79 +126,58 @@ function handleTextExplainTrigger(type) {
   const selectedText = selection.toString().trim();
 
   if (type === "quick-explain") {
-    createQuickExplainPopup(popupId, range, selectedText);
+    const popup = new QuickExplainPopup(popupId);
+
+    popup.create(range, selectedText);
+    popups.set(popupId, popup);
   } else if (type === "contextual-explain") {
-    createContextualExplainPopup(popupId, range, selectedText);
+    const popup = new ContextualExplainPopup(popupId);
+
+    popup.create(range, selectedText);
+    popups.set(popupId, popup);
   }
 }
 
 async function handleVisualExplainTrigger(type, imageUri) {
-  if (isLastRequestBeingProcessed()) {
+  const lastPopup = popups.get(popupCounter);
+
+  if (lastPopup && lastPopup.isBeingProcessed) {
     return;
   }
 
   const popupId = ++popupCounter;
 
   if (type === "visual-explain") {
-    createVisualExplainPopup(popupId, imageUri);
+    const popup = new VisualExplainPopup(popupId);
+    popup.create(imageUri);
+    popups.set(popupId, popup);
   }
-}
-
-function isLastAVisualPopup() {
-  const popup = popups.get(popupCounter);
-
-  if (!popup) {
-    return false;
-  }
-
-  return popup.type === "visual-explain";
-}
-
-function isMouseDownOnVisualPopup() {
-  const popup = popups.get(popupCounter);
-
-  if (!popup) {
-    return false;
-  }
-
-  if (!isLastAVisualPopup()) {
-    return false;
-  }
-
-  return popup.isMouseDown;
-}
-
-function isLastRequestBeingProcessed() {
-  const popup = popups.get(popupCounter);
-
-  if (!popup) {
-    return false;
-  }
-
-  return popup.isBeingProcessed;
 }
 
 function cancelOrCloseLastPopup() {
-  const popup = popups.get(popupCounter);
+  const lastPopup = popups.get(popupCounter);
 
-  if (!popup) {
+  if (lastPopup && !lastPopup.isBeingProcessed) {
     return;
   }
 
-  if (!popup.isBeingProcessed) {
-    return;
-  }
-
-  if (popup.type === "quick-explain") {
+  if (lastPopup.type === "quick-explain") {
     sendMessage("WEB_CANCEL_STREAM", popupCounter, null, null);
-  } else if (popup.type === "contextual-explain") {
-    if (!popup.gotContextInput) {
+  } else if (lastPopup.type === "contextual-explain") {
+    if (!lastPopup.gotContextInput) {
       removePopup(popupCounter);
     } else {
       sendMessage("WEB_CANCEL_STREAM", popupCounter, null, null);
     }
-  } else if (popup.type === "visual-explain") {
-    removePopup(popupCounter);
+  } else if (lastPopup.type === "visual-explain") {
+    if (lastPopup.isSelectionMade) {
+      lastPopup.removeVisualSelection();
+    } else if (lastPopup.isMouseDown) {
+      lastPopup.stopVisualSelection();
+      lastPopup.removeVisualSelection();
+    } else {
+      removePopup(popupCounter);
+    }
   }
 }
 
