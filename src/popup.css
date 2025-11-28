@@ -106,7 +106,7 @@
   background: #555;
 }
 
-.visual-backdrop {
+.popup-backdrop {
   position: fixed;
   top: 0;
   left: 0;
@@ -116,7 +116,7 @@
   z-index: 10000;
 }
 
-.context-lens-popup.visual {
+.context-lens-popup.image {
   position: fixed;
   top: 5vh;
   left: 5vw;
@@ -132,14 +132,14 @@
   overflow: hidden;
 }
 
-.context-lens-popup.visual img {
+.context-lens-popup.image img {
   max-width: 90vw;
   max-height: 90vh;
   object-fit: contain;
   pointer-events: none;
 }
 
-.context-lens-popup.visual.selection-rect {
+.context-lens-popup.image.selection-rect {
   position: absolute;
   border: 2px dashed white;
   border-radius: 10px;
@@ -156,7 +156,7 @@
   align-items: unset;
 }
 
-.context-lens-popup.visual.close-btn {
+.context-lens-popup.image.close-btn {
   position: fixed;
   top: calc(5vh / 2 - 15px);
   left: 0;
@@ -176,6 +176,6 @@
   z-index: 10002;
 }
 
-.context-lens-popup.visual.close-btn:hover {
+.context-lens-popup.image.close-btn:hover {
   background: #666;
 }

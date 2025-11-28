@@ -28,7 +28,7 @@
         "src/popup.js",
         "src/quick_explain_popup.js",
         "src/contextual_explain_popup.js",
-        "src/visual_explain_popup.js",
+        "src/image_explain_popup.js",
         "src/model_response_handler.js"
       ]
     }
@@ -52,8 +52,8 @@
         "default": "Shift+Alt+C"
       }
     },
-    "visual-explain": {
-      "description": "Explain from Visual Context",
+    "image-explain": {
+      "description": "Image Explain",
       "suggested_key": {
         "default": "Shift+Alt+I"
       }

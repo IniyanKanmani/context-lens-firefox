@@ -3,8 +3,8 @@ browser.runtime.onMessage.addListener((message, _, __) => {
     handleTextExplainTrigger("quick-explain");
   } else if (message.type === "SER_CONTEXTUAL_EXPLAIN_KEY_TRIGGERED") {
     handleTextExplainTrigger("contextual-explain");
-  } else if (message.type === "SER_VISUAL_EXPLAIN_KEY_TRIGGERED") {
-    handleVisualExplainTrigger("visual-explain", message.imageUri);
+  } else if (message.type === "SER_IMAGE_EXPLAIN_KEY_TRIGGERED") {
+    handleImageExplainTrigger("image-explain", message.imageUri);
   } else if (message.type === "SER_LLM_REQUEST_SUCCESS") {
     handleLLMRequestSuccess(message.popupId);
   } else if (message.type === "SER_LLM_REQUEST_FAILURE") {
@@ -55,7 +55,11 @@ document.addEventListener("mousedown", (event) => {
     return;
   }
 
-  if (lastPopup.type !== "visual-explain") {
+  if (
+    isInsidePopup &&
+    lastPopup.type !== "image-explain" &&
+    elementId.startsWith("popup-")
+  ) {
     const popupId = parseInt(elementId.split("-")[1]);
 
     if (popupId !== popupCounter && lastPopup.isBeingProcessed) {
@@ -67,12 +71,16 @@ document.addEventListener("mousedown", (event) => {
     return;
   }
 
-  if (
-    lastPopup.isBeingProcessed &&
-    !lastPopup.isSelectionMade &&
-    !lastPopup.isMouseDown
-  ) {
-    lastPopup.startVisualSelection(event.clientX, event.clientY);
+  if (isInsidePopup && lastPopup.type === "image-explain") {
+    if (
+      lastPopup.isBeingProcessed &&
+      !lastPopup.isSelectionMade &&
+      !lastPopup.isMouseDown
+    ) {
+      lastPopup.startVisualSelection(event.clientX, event.clientY);
+
+      return;
+    }
   }
 });
 
@@ -84,7 +92,7 @@ document.addEventListener("mousemove", (event) => {
   }
 
   if (
-    lastPopup.type === "visual-explain" &&
+    lastPopup.type === "image-explain" &&
     lastPopup.isBeingProcessed &&
     lastPopup.isMouseDown
   ) {
@@ -100,7 +108,7 @@ document.addEventListener("mouseup", (event) => {
   }
 
   if (
-    lastPopup.type === "visual-explain" &&
+    lastPopup.type === "image-explain" &&
     lastPopup.isBeingProcessed &&
     lastPopup.isMouseDown
   ) {
@@ -138,7 +146,7 @@ function handleTextExplainTrigger(type) {
   }
 }
 
-async function handleVisualExplainTrigger(type, imageUri) {
+async function handleImageExplainTrigger(type, imageUri) {
   const lastPopup = popups.get(popupCounter);
 
   if (lastPopup && lastPopup.isBeingProcessed) {
@@ -147,8 +155,8 @@ async function handleVisualExplainTrigger(type, imageUri) {
 
   const popupId = ++popupCounter;
 
-  if (type === "visual-explain") {
-    const popup = new VisualExplainPopup(popupId);
+  if (type === "image-explain") {
+    const popup = new ImageExplainPopup(popupId);
     popup.create(imageUri);
     popups.set(popupId, popup);
   }
@@ -169,7 +177,7 @@ function cancelOrCloseLastPopup() {
     } else {
       sendMessage("WEB_CANCEL_STREAM", popupCounter, null, null);
     }
-  } else if (lastPopup.type === "visual-explain") {
+  } else if (lastPopup.type === "image-explain") {
     if (lastPopup.isSelectionMade) {
       lastPopup.removeVisualSelection();
     } else if (lastPopup.isMouseDown) {

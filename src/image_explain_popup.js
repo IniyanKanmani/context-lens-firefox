@@ -1,6 +1,6 @@
-class VisualExplainPopup {
+class ImageExplainPopup {
   constructor(popupId) {
-    this.type = "visual-explain";
+    this.type = "image-explain";
     this.popupId = popupId;
     this.isBeingProcessed = true;
     this.isMouseDown = false;
@@ -11,23 +11,23 @@ class VisualExplainPopup {
 
   create(imageUri) {
     const backdrop = document.createElement("div");
-    backdrop.className = "visual-backdrop";
+    backdrop.className = "popup-backdrop";
     document.body.appendChild(backdrop);
     this.backdrop = backdrop;
 
     const popup = document.createElement("div");
-    popup.className = "context-lens-popup visual";
+    popup.className = "context-lens-popup image";
     popup.id = `popup-${this.popupId}`;
 
     const img = document.createElement("img");
     img.src = imageUri;
-    img.alt = `tab-screen-shot-popup-${this.popupId}`;
+    img.alt = "Visible Tab Screenshot";
     popup.appendChild(img);
     document.body.appendChild(popup);
     this.element = popup;
 
     const closeBtn = document.createElement("button");
-    closeBtn.className = "context-lens-popup visual close-btn";
+    closeBtn.className = "context-lens-popup image close-btn";
     closeBtn.textContent = "×";
     closeBtn.addEventListener("click", () => removePopup(this.popupId));
     document.body.appendChild(closeBtn);
@@ -44,17 +44,17 @@ class VisualExplainPopup {
     this.selectionRect = [initialX, initialY, initialX, initialY];
 
     this.selectionDiv = document.createElement("div");
-    this.selectionDiv.className = "context-lens-popup visual selection-rect";
+    this.selectionDiv.className = "context-lens-popup image selection-rect";
     this.element.appendChild(this.selectionDiv);
 
-    this.updateSelectionDivDim();
+    this.updateSelectionDivDimensions();
   }
 
   updateVisualSelection(currentX, currentY) {
     this.selectionRect[2] = currentX;
     this.selectionRect[3] = currentY;
 
-    this.updateSelectionDivDim();
+    this.updateSelectionDivDimensions();
   }
 
   stopVisualSelection(finalX, finalY) {
@@ -63,10 +63,10 @@ class VisualExplainPopup {
     this.selectionRect[2] = finalX;
     this.selectionRect[3] = finalY;
 
-    this.updateSelectionDivDim();
+    this.updateSelectionDivDimensions();
   }
 
-  updateSelectionDivDim() {
+  updateSelectionDivDimensions() {
     const [x1, y1, x2, y2] = this.selectionRect;
 
     const left = Math.min(x1, x2);
