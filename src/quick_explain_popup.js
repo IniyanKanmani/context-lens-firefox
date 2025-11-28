@@ -67,7 +67,9 @@ class QuickExplainPopup {
 
     this.element = popup;
 
-    sendMessage("WEB_QUICK_EXPLAIN", this.popupId, selectedText);
+    this.selectedText = selectedText;
+
+    sendMessage("WEB_QUICK_EXPLAIN", this.popupId, this.selectedText);
   }
 
   remove() {

@@ -68,6 +68,7 @@ class ContextualExplainPopup {
     const button = document.createElement("button");
     const img = document.createElement("img");
     img.src = browser.runtime.getURL("src/icons/send-icon.svg");
+    img.alt = "Send";
     button.appendChild(img);
 
     popup.appendChild(textarea);
@@ -76,6 +77,9 @@ class ContextualExplainPopup {
 
     this.element = popup;
 
+    this.selectedText = selectedText;
+
+    // Hack to give textarea focus
     setTimeout(() => {
       textarea.focus();
       textarea.setSelectionRange(null, null);
@@ -85,41 +89,37 @@ class ContextualExplainPopup {
       selection.addRange(range);
     }, 100);
 
-    const sendContext = () => {
-      const additionalContext = textarea.value.trim();
+    button.addEventListener("click", () => {
+      this.sendContext(textarea.value.trim());
+    });
 
-      if (!additionalContext) {
-        return;
-      }
-
-      const popupData = popups.get(popupCounter);
-
-      if (!popupData) {
-        return;
-      }
-
-      popupData.gotContextInput = true;
-
-      sendMessage(
-        "WEB_CONTEXTUAL_EXPLAIN",
-        this.popupId,
-        selectedText,
-        additionalContext,
-      );
-
-      popup.innerHTML = "";
-      popup.classList.remove("context-input");
-      popup.classList.add("loading");
-      popup.textContent = "Fetching...";
-    };
-
-    button.addEventListener("click", sendContext);
     textarea.addEventListener("keydown", (event) => {
       if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
-        sendContext();
+        this.sendContext(textarea.value.trim());
       }
     });
+  }
+
+  sendContext(additionalContext) {
+    if (!additionalContext) {
+      return;
+    }
+
+    this.gotContextInput = true;
+    this.additionalContext = additionalContext;
+
+    sendMessage(
+      "WEB_CONTEXTUAL_EXPLAIN",
+      this.popupId,
+      this.selectedText,
+      this.additionalContext,
+    );
+
+    this.element.innerHTML = "";
+    this.element.classList.remove("context-input");
+    this.element.classList.add("loading");
+    this.element.textContent = "Fetching...";
   }
 
   remove() {
