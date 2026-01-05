@@ -130,18 +130,20 @@
   border: 2px solid #666;
   border-radius: 10px;
   overflow: hidden;
+  user-select: none;
+  padding: 0;
 }
 
 .context-lens-popup.image img {
-  max-width: 90vw;
-  max-height: 90vh;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   pointer-events: none;
 }
 
 .context-lens-popup.image.selection-rect {
   position: absolute;
-  border: 2px dashed white;
+  border: 2px solid white;
   border-radius: 10px;
   background: transparent;
   box-shadow: 0 0 0 10000px rgba(0, 0, 0, 0.45);
