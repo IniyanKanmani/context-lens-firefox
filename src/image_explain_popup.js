@@ -23,8 +23,11 @@ class ImageExplainPopup {
     img.src = imageUri;
     img.alt = "Visible Tab Screenshot";
     popup.appendChild(img);
-    document.body.appendChild(popup);
+
+    this.img = img;
     this.element = popup;
+    this.imageUri = imageUri;
+    document.body.appendChild(popup);
 
     const closeBtn = document.createElement("button");
     closeBtn.className = "context-lens-popup image close-btn";
@@ -66,6 +69,43 @@ class ImageExplainPopup {
     this.updateSelectionDivDimensions();
   }
 
+  cropImageSelection() {
+    const image = new Image();
+    image.src = this.imageUri;
+
+    image.onload = () => {
+      const imgElement = this.img;
+      const imgRect = imgElement.getBoundingClientRect();
+      const popupRect = this.element.getBoundingClientRect();
+      const selectionRect = this.getSelectionRectFromDiv(this.selectionDiv);
+
+      const { sx, sy, sWidth, sHeight } = this.calculateScaledCoordinates(
+        image,
+        imgRect,
+        popupRect,
+        selectionRect,
+      );
+
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      canvas.width = sWidth;
+      canvas.height = sHeight;
+
+      context.drawImage(image, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
+      this.croppedImageUri = canvas.toDataURL("image/png", 1);
+
+    };
+  }
+
+  removeVisualSelection() {
+    if (this.selectionDiv) {
+      this.selectionDiv.remove();
+    }
+
+    this.selectionRect = null;
+    this.isSelectionMade = false;
+  }
+
   updateSelectionDivDimensions() {
     const [x1, y1, x2, y2] = this.selectionRect;
 
@@ -84,23 +124,28 @@ class ImageExplainPopup {
     this.selectionDiv.style.height = height + "px";
   }
 
-  removeVisualSelection() {
-    if (this.selectionDiv) {
-      this.selectionDiv.remove();
-    }
-
-    this.selectionRect = null;
-    this.isSelectionMade = false;
+  getSelectionRectFromDiv(selectionDiv) {
+    return [
+      parseFloat(selectionDiv.style.left),
+      parseFloat(selectionDiv.style.top),
+      parseFloat(selectionDiv.style.width),
+      parseFloat(selectionDiv.style.height),
+    ];
   }
 
-  convertClientToPopupDim(dim, value) {
-    if (dim === "w") {
-      return value - (window.innerWidth * 5) / 100 - 3;
-    } else if (dim === "h") {
-      return value - (window.innerHeight * 5) / 100 - 3;
-    }
+  calculateScaledCoordinates(image, imgRect, popupRect, selectionRect) {
+    const [left, top, width, height] = selectionRect;
+    const scaleX = image.naturalWidth / imgRect.width;
+    const scaleY = image.naturalHeight / imgRect.height;
+    const imageOffsetLeft = imgRect.left - popupRect.left;
+    const imageOffsetTop = imgRect.top - popupRect.top;
 
-    return value;
+    const sx = (left - imageOffsetLeft) * scaleX;
+    const sy = (top - imageOffsetTop) * scaleY;
+    const sWidth = width * scaleX;
+    const sHeight = height * scaleY;
+
+    return { sx, sy, sWidth, sHeight };
   }
 
   remove() {

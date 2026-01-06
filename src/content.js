@@ -31,6 +31,16 @@ document.addEventListener("keydown", (event) => {
     } else {
       removeAllPopups();
     }
+  } else if (event.key === "Enter") {
+    const lastPopup = popups.get(popupCounter);
+
+    if (!lastPopup) {
+      return;
+    }
+
+    if (lastPopup.type === "image-explain" && lastPopup.isSelectionMade) {
+      lastPopup.cropImageSelection();
+    }
   }
 });
 
