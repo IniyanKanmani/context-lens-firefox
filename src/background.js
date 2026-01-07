@@ -2,6 +2,7 @@ import {
   streamControllers,
   invokeQuickLLM,
   invokeContextualLLM,
+  invokeImageLLM,
 } from "./model_invoker.js";
 
 browser.runtime.onMessage.addListener(async (message, sender, _) => {
@@ -14,6 +15,8 @@ browser.runtime.onMessage.addListener(async (message, sender, _) => {
       message.selectedText,
       message.additionalContext,
     );
+  } else if (message.type === "WEB_IMAGE_EXPLAIN") {
+    await invokeImageLLM(sender.tab.id, message.popupId, message.imageUri);
   } else if (message.type === "WEB_CANCEL_STREAM") {
     streamControllers[`${sender.tab.id}-${message.popupId}`].abort();
   }

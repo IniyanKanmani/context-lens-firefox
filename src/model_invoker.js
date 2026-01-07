@@ -2,21 +2,24 @@ import { getEnv } from "./get_env.js";
 import {
   quickExplainSystemPrompt,
   contextualExplainSystemPrompt,
+  imageExplainSystemPrompt,
 } from "./prompt.js";
 import { sendMessage } from "./background.js";
 
 let OPENROUTER_API_KEY;
-let OPENROUTER_MODEL;
+let OPENROUTER_TEXT_MODEL;
+let OPENROUTER_IMAGE_MODEL;
 
 export const streamControllers = new Map();
 
 async function loadenv() {
   OPENROUTER_API_KEY = await getEnv("OPENROUTER_API_KEY");
-  OPENROUTER_MODEL = await getEnv("OPENROUTER_MODEL");
+  OPENROUTER_TEXT_MODEL = await getEnv("OPENROUTER_TEXT_MODEL");
+  OPENROUTER_IMAGE_MODEL = await getEnv("OPENROUTER_IMAGE_MODEL");
 }
 
 export async function invokeQuickLLM(tabId, popupId, selectedText) {
-  if (OPENROUTER_API_KEY === undefined || OPENROUTER_MODEL === undefined) {
+  if (OPENROUTER_API_KEY === undefined || OPENROUTER_TEXT_MODEL === undefined) {
     await loadenv();
   }
 
@@ -33,7 +36,7 @@ export async function invokeQuickLLM(tabId, popupId, selectedText) {
           Authorization: "Bearer " + OPENROUTER_API_KEY,
         },
         body: JSON.stringify({
-          model: OPENROUTER_MODEL,
+          model: OPENROUTER_TEXT_MODEL,
           stream: true,
           messages: [
             {
@@ -56,7 +59,7 @@ export async function invokeQuickLLM(tabId, popupId, selectedText) {
             },
           ],
           provider: {
-            order: ["novita/bf16", "phala"],
+            order: ["hyperbolic", "novita/bf16", "phala"],
             allow_fallbacks: true,
             data_collection: "deny",
             zdr: true,
@@ -88,7 +91,7 @@ export async function invokeContextualLLM(
   selectedText,
   additionalContext,
 ) {
-  if (OPENROUTER_API_KEY === undefined || OPENROUTER_MODEL === undefined) {
+  if (OPENROUTER_API_KEY === undefined || OPENROUTER_TEXT_MODEL === undefined) {
     await loadenv();
   }
 
@@ -105,7 +108,7 @@ export async function invokeContextualLLM(
           Authorization: "Bearer " + OPENROUTER_API_KEY,
         },
         body: JSON.stringify({
-          model: OPENROUTER_MODEL,
+          model: OPENROUTER_TEXT_MODEL,
           stream: true,
           messages: [
             {
@@ -128,10 +131,80 @@ export async function invokeContextualLLM(
             },
           ],
           provider: {
-            order: ["novita/bf16", "phala"],
+            order: ["hyperbolic", "novita/bf16", "phala"],
             allow_fallbacks: true,
             data_collection: "deny",
             zdr: true,
+            sort: "latency",
+          },
+        }),
+        signal: streamController.signal,
+      },
+    );
+
+    if (request.status === 200) {
+      sendMessage("SER_LLM_REQUEST_SUCCESS", tabId, popupId, request.status);
+      await processStream(tabId, popupId, request.body);
+    } else {
+      sendMessage("SER_LLM_REQUEST_FAILURE", tabId, popupId, request.status);
+      delete streamControllers[`${tabId}-${popupId}`];
+    }
+  } catch (error) {
+    if (error.name === "AbortError") {
+      sendMessage("SER_LLM_STREAM_CANCELED", tabId, popupId, null);
+      delete streamControllers[`${tabId}-${popupId}`];
+    }
+  }
+}
+
+export async function invokeImageLLM(tabId, popupId, imageUri) {
+  if (
+    OPENROUTER_API_KEY === undefined ||
+    OPENROUTER_IMAGE_MODEL === undefined
+  ) {
+    await loadenv();
+  }
+
+  const streamController = new AbortController();
+  streamControllers[`${tabId}-${popupId}`] = streamController;
+
+  try {
+    const request = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + OPENROUTER_API_KEY,
+        },
+        body: JSON.stringify({
+          model: OPENROUTER_IMAGE_MODEL,
+          stream: true,
+          messages: [
+            {
+              role: "system",
+              content: [
+                {
+                  type: "text",
+                  text: imageExplainSystemPrompt,
+                },
+              ],
+            },
+            {
+              role: "user",
+              content: [
+                {
+                  type: "image_url",
+                  image_url: imageUri,
+                },
+              ],
+            },
+          ],
+          provider: {
+            order: ["deepinfra/fp8"],
+            allow_fallbacks: true,
+            // data_collection: "deny",
+            // zdr: true,
             sort: "latency",
           },
         }),

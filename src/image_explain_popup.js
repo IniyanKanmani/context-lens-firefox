@@ -92,9 +92,18 @@ class ImageExplainPopup {
       canvas.height = sHeight;
 
       context.drawImage(image, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
-      this.croppedImageUri = canvas.toDataURL("image/png", 1);
 
+      const croppedImageUri = canvas.toDataURL("image/png", 1);
+      this.sendImage(croppedImageUri);
     };
+  }
+
+  sendImage(imageUri) {
+    if (!imageUri) {
+      return;
+    }
+
+    sendMessage("WEB_IMAGE_EXPLAIN", this.popupId, null, null, imageUri);
   }
 
   removeVisualSelection() {

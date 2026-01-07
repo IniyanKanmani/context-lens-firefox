@@ -11,6 +11,7 @@ browser.runtime.onMessage.addListener((message, _, __) => {
     handleLLMRequestFailure(message.popupId);
   } else if (message.type === "SER_LLM_STREAM_CHUNK") {
     handleLLMStreamChunk(message.popupId, message.content);
+    console.log(message.content);
   } else if (message.type === "SER_LLM_STREAM_CANCELED") {
     removePopup(message.popupId);
   } else if (message.type === "SER_LLM_STREAM_CLOSED") {
@@ -199,11 +200,12 @@ function cancelOrCloseLastPopup() {
   }
 }
 
-function sendMessage(type, popupId, selectedText, additionalContext) {
+function sendMessage(type, popupId, selectedText, additionalContext, imageUri) {
   browser.runtime.sendMessage({
     type: type,
     popupId: popupId,
     selectedText: selectedText,
     additionalContext: additionalContext,
+    imageUri: imageUri,
   });
 }
