@@ -12,8 +12,10 @@ function removePopup(popupId) {
   if (popup) {
     popup.remove();
 
-    popups.delete(popupId);
-    popupCounter = popupId - 1;
+    if (!popup.isBeingProcessed) {
+      popups.delete(popupId);
+      popupCounter = popupId - 1;
+    }
   }
 }
 

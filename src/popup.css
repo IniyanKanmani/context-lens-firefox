@@ -181,3 +181,39 @@
 .context-lens-popup.image.close-btn:hover {
   background: #666;
 }
+
+.context-lens-popup.image-response-overlay {
+  position: absolute;
+  width: 400px;
+  min-height: 39px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10003;
+  background: #222;
+  color: white;
+  border: 1px solid #666;
+  border-radius: 10px;
+  padding: 10px;
+  box-sizing: border-box;
+  font-family: sans-serif;
+  font-size: 14px;
+  line-height: 1.2em;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  user-select: text;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.context-lens-popup.image-response-overlay.loading {
+  background: linear-gradient(90deg, #333 25%, #555 50%, #333 75%);
+  background-size: 200% 100%;
+  animation: shimmer-lr 1.5s infinite;
+  overflow-y: hidden;
+}
+
+.context-lens-popup.image-response-overlay.complete {
+  background: linear-gradient(180deg, #333 25%, #555 50%, #333 75%);
+  background-size: 100% 200%;
+  animation: shimmer-tb 1.5s;
+  overflow-y: auto;
+}

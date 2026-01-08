@@ -11,7 +11,6 @@ browser.runtime.onMessage.addListener((message, _, __) => {
     handleLLMRequestFailure(message.popupId);
   } else if (message.type === "SER_LLM_STREAM_CHUNK") {
     handleLLMStreamChunk(message.popupId, message.content);
-    console.log(message.content);
   } else if (message.type === "SER_LLM_STREAM_CANCELED") {
     removePopup(message.popupId);
   } else if (message.type === "SER_LLM_STREAM_CLOSED") {
@@ -27,11 +26,12 @@ document.addEventListener("keydown", (event) => {
       return;
     }
 
-    if (lastPopup.isBeingProcessed) {
-      cancelOrCloseLastPopup();
-    } else {
-      removeAllPopups();
-    }
+    // if (lastPopup.isBeingProcessed) {
+    //   cancelOrCloseLastPopup();
+    // } else {
+    //   removeAllPopups();
+    // }
+    cancelOrCloseLastPopup();
   } else if (event.key === "Enter") {
     const lastPopup = popups.get(popupCounter);
 
@@ -56,12 +56,18 @@ document.addEventListener("mousedown", (event) => {
     return;
   }
 
-  if (!isInsidePopup) {
-    if (lastPopup.isBeingProcessed) {
-      cancelOrCloseLastPopup();
-    }
+  // if (!isInsidePopup) {
+  //   if (lastPopup.isBeingProcessed) {
+  //     cancelOrCloseLastPopup();
+  //   }
+  //
+  //   removeAllPopups();
+  //
+  //   return;
+  // }
 
-    removeAllPopups();
+  if (!isInsidePopup) {
+    cancelOrCloseLastPopup();
 
     return;
   }
@@ -176,26 +182,36 @@ async function handleImageExplainTrigger(type, imageUri) {
 function cancelOrCloseLastPopup() {
   const lastPopup = popups.get(popupCounter);
 
-  if (lastPopup && !lastPopup.isBeingProcessed) {
+  if (!lastPopup) {
     return;
   }
 
   if (lastPopup.type === "quick-explain") {
-    sendMessage("WEB_CANCEL_STREAM", popupCounter, null, null);
-  } else if (lastPopup.type === "contextual-explain") {
-    if (!lastPopup.gotContextInput) {
-      removePopup(popupCounter);
-    } else {
+    if (lastPopup.isBeingProcessed) {
       sendMessage("WEB_CANCEL_STREAM", popupCounter, null, null);
     }
+  } else if (lastPopup.type === "contextual-explain") {
+    if (lastPopup.isBeingProcessed) {
+      if (!lastPopup.gotContextInput) {
+        removePopup(popupCounter);
+      } else {
+        sendMessage("WEB_CANCEL_STREAM", popupCounter, null, null);
+      }
+    }
   } else if (lastPopup.type === "image-explain") {
-    if (lastPopup.isSelectionMade) {
-      lastPopup.removeVisualSelection();
-    } else if (lastPopup.isMouseDown) {
-      lastPopup.stopVisualSelection();
-      lastPopup.removeVisualSelection();
+    if (lastPopup.isBeingProcessed) {
+      if (lastPopup.responsePopup) {
+        sendMessage("WEB_CANCEL_STREAM", popupCounter, null, null);
+      } else if (lastPopup.isSelectionMade) {
+        lastPopup.removeVisualSelection();
+      } else if (lastPopup.isMouseDown) {
+        lastPopup.stopVisualSelection();
+        lastPopup.removeVisualSelection();
+      } else {
+        removePopup(popupCounter);
+      }
     } else {
-      removePopup(popupCounter);
+      lastPopup.removeResponsePopup();
     }
   }
 }

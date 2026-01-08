@@ -95,6 +95,7 @@ class ImageExplainPopup {
 
       const croppedImageUri = canvas.toDataURL("image/png", 1);
       this.sendImage(croppedImageUri);
+      this.createResponseOverlay();
     };
   }
 
@@ -104,15 +105,6 @@ class ImageExplainPopup {
     }
 
     sendMessage("WEB_IMAGE_EXPLAIN", this.popupId, null, null, imageUri);
-  }
-
-  removeVisualSelection() {
-    if (this.selectionDiv) {
-      this.selectionDiv.remove();
-    }
-
-    this.selectionRect = null;
-    this.isSelectionMade = false;
   }
 
   updateSelectionDivDimensions() {
@@ -157,7 +149,104 @@ class ImageExplainPopup {
     return { sx, sy, sWidth, sHeight };
   }
 
+  createResponseOverlay() {
+    const popupRect = this.element.getBoundingClientRect();
+    const selectionLeft = parseFloat(this.selectionDiv.style.left);
+    const selectionTop = parseFloat(this.selectionDiv.style.top);
+    const selectionWidth = parseFloat(this.selectionDiv.style.width);
+    const selectionHeight = parseFloat(this.selectionDiv.style.height);
+
+    const selectionAbsRect = {
+      left: popupRect.left + selectionLeft,
+      top: popupRect.top + selectionTop,
+      right: popupRect.left + selectionLeft + selectionWidth,
+      bottom: popupRect.top + selectionTop + selectionHeight,
+      width: selectionWidth,
+      height: selectionHeight,
+    };
+
+    const overlayWidth = 400;
+    const overlayHeight = 100;
+    const margin = 5;
+
+    let left, top;
+
+    if (
+      selectionAbsRect.right + margin + overlayWidth <= window.innerWidth &&
+      selectionAbsRect.bottom + margin + overlayHeight <= window.innerHeight
+    ) {
+      left = selectionAbsRect.right + margin;
+      top = selectionAbsRect.bottom + margin;
+    } else if (
+      selectionAbsRect.left + overlayWidth <= window.innerWidth &&
+      selectionAbsRect.bottom + margin + overlayHeight <= window.innerHeight
+    ) {
+      left = selectionAbsRect.left;
+      top = selectionAbsRect.bottom + margin;
+    } else if (
+      selectionAbsRect.right + margin + overlayWidth <= window.innerWidth &&
+      selectionAbsRect.top + overlayHeight <= window.innerHeight
+    ) {
+      left = selectionAbsRect.right + margin;
+      top = selectionAbsRect.top;
+    } else if (
+      selectionAbsRect.left - margin - overlayWidth >= 0 &&
+      selectionAbsRect.top + overlayHeight <= window.innerHeight
+    ) {
+      left = selectionAbsRect.left - margin - overlayWidth;
+      top = selectionAbsRect.top;
+    } else if (
+      selectionAbsRect.left - margin - overlayWidth >= 0 &&
+      selectionAbsRect.top - margin - overlayHeight >= 0
+    ) {
+      left = selectionAbsRect.left - margin - overlayWidth;
+      top = selectionAbsRect.top - margin - overlayHeight;
+    } else {
+      left =
+        selectionAbsRect.left + (selectionAbsRect.width - overlayWidth) / 2;
+      top =
+        selectionAbsRect.top + (selectionAbsRect.height - overlayHeight) / 2;
+
+      left = Math.max(0, Math.min(left, window.innerWidth - overlayWidth));
+      top = Math.max(0, Math.min(top, window.innerHeight - overlayHeight));
+    }
+
+    const overlay = document.createElement("div");
+    overlay.className = "context-lens-popup image-response-overlay";
+    overlay.style.left = left + "px";
+    overlay.style.top = top + "px";
+
+    overlay.classList.add("loading");
+    overlay.textContent = "Generating...";
+
+    document.body.appendChild(overlay);
+    this.responsePopup = overlay;
+  }
+
+  removeVisualSelection() {
+    if (this.selectionDiv) {
+      this.selectionDiv.remove();
+    }
+
+    this.selectionRect = null;
+    this.isSelectionMade = false;
+  }
+
+  removeResponsePopup() {
+    if (this.responsePopup) {
+      this.responsePopup.remove();
+    }
+
+    this.responsePopup = null;
+    this.isBeingProcessed = true;
+  }
+
   remove() {
+    if (this.responsePopup) {
+      this.removeResponsePopup();
+      return;
+    }
+
     if (this.closeBtn) {
       this.closeBtn.remove();
     }

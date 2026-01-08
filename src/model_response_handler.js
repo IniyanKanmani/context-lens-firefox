@@ -5,7 +5,9 @@ function handleLLMRequestSuccess(popupId) {
     return;
   }
 
-  popup.element.textContent = "Generating...";
+  const targetElement =
+    popup.type === "image-explain" ? popup.responsePopup : popup.element;
+  targetElement.textContent = "Generating...";
 }
 
 function handleLLMRequestFailure(popupId) {
@@ -15,8 +17,10 @@ function handleLLMRequestFailure(popupId) {
     return;
   }
 
-  popup.element.classList.remove("loading");
-  popup.element.textContent = "Request failed. Please retry...";
+  const targetElement =
+    popup.type === "image-explain" ? popup.responsePopup : popup.element;
+  targetElement.classList.remove("loading");
+  targetElement.textContent = "Request failed. Please retry...";
 
   setTimeout(() => {
     popup.remove();
@@ -36,14 +40,17 @@ function handleLLMStreamChunk(popupId, content) {
     return;
   }
 
+  const targetElement =
+    popup.type === "image-explain" ? popup.responsePopup : popup.element;
+
   if (!popup.hasReceivedFirstToken) {
-    popup.element.classList.remove("loading");
+    targetElement.classList.remove("loading");
     popup.hasReceivedFirstToken = true;
     popup.content = "";
   }
 
   popup.content += content;
-  popup.element.textContent = popup.content;
+  targetElement.textContent = popup.content;
 }
 
 function handleLLMStreamClosed(popupId) {
@@ -53,11 +60,14 @@ function handleLLMStreamClosed(popupId) {
     return;
   }
 
+  const targetElement =
+    popup.type === "image-explain" ? popup.responsePopup : popup.element;
+
   setTimeout(() => {
-    popup.element.classList.add("complete");
+    targetElement.classList.add("complete");
 
     setTimeout(() => {
-      popup.element.classList.remove("complete");
+      targetElement.classList.remove("complete");
       popup.isBeingProcessed = false;
     }, 750);
   }, 250);
