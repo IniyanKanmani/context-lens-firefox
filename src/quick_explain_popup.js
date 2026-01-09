@@ -74,5 +74,6 @@ class QuickExplainPopup {
 
   remove() {
     this.element.remove();
+    this.isBeingProcessed = false;
   }
 }

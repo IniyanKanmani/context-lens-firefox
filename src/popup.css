@@ -186,7 +186,7 @@
   position: absolute;
   width: 400px;
   min-height: 39px;
-  max-height: 200px;
+  max-height: 150px;
   overflow-y: auto;
   z-index: 10003;
   background: #222;

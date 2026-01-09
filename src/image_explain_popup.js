@@ -3,6 +3,7 @@ class ImageExplainPopup {
     this.type = "image-explain";
     this.popupId = popupId;
     this.isBeingProcessed = true;
+    this.isBeingInfered = false;
     this.isMouseDown = false;
     this.selectionRect = null;
     this.isSelectionMade = false;
@@ -69,7 +70,7 @@ class ImageExplainPopup {
     this.updateSelectionDivDimensions();
   }
 
-  cropImageSelection() {
+  cropImageAndInfer() {
     const image = new Image();
     image.src = this.imageUri;
 
@@ -95,7 +96,6 @@ class ImageExplainPopup {
 
       const croppedImageUri = canvas.toDataURL("image/png", 1);
       this.sendImage(croppedImageUri);
-      this.createResponseOverlay();
     };
   }
 
@@ -105,6 +105,9 @@ class ImageExplainPopup {
     }
 
     sendMessage("WEB_IMAGE_EXPLAIN", this.popupId, null, null, imageUri);
+
+    this.isBeingInfered = true;
+    this.createResponseOverlay();
   }
 
   updateSelectionDivDimensions() {
@@ -151,64 +154,54 @@ class ImageExplainPopup {
 
   createResponseOverlay() {
     const popupRect = this.element.getBoundingClientRect();
+
     const selectionLeft = parseFloat(this.selectionDiv.style.left);
     const selectionTop = parseFloat(this.selectionDiv.style.top);
     const selectionWidth = parseFloat(this.selectionDiv.style.width);
     const selectionHeight = parseFloat(this.selectionDiv.style.height);
 
     const selectionAbsRect = {
-      left: popupRect.left + selectionLeft,
-      top: popupRect.top + selectionTop,
-      right: popupRect.left + selectionLeft + selectionWidth,
-      bottom: popupRect.top + selectionTop + selectionHeight,
+      left: selectionLeft,
+      top: selectionTop,
+      right: selectionLeft + selectionWidth,
+      bottom: selectionTop + selectionHeight,
       width: selectionWidth,
       height: selectionHeight,
     };
 
     const overlayWidth = 400;
-    const overlayHeight = 100;
+    const overlayHeight = 150;
     const margin = 5;
 
     let left, top;
 
     if (
-      selectionAbsRect.right + margin + overlayWidth <= window.innerWidth &&
-      selectionAbsRect.bottom + margin + overlayHeight <= window.innerHeight
+      selectionAbsRect.right + margin + overlayWidth <= popupRect.width &&
+      selectionAbsRect.top + margin + overlayHeight <= popupRect.height
     ) {
       left = selectionAbsRect.right + margin;
-      top = selectionAbsRect.bottom + margin;
+      top = selectionAbsRect.top;
     } else if (
-      selectionAbsRect.left + overlayWidth <= window.innerWidth &&
-      selectionAbsRect.bottom + margin + overlayHeight <= window.innerHeight
+      selectionAbsRect.left + margin + overlayWidth <= popupRect.width &&
+      selectionAbsRect.bottom + margin + overlayHeight <= popupRect.height
     ) {
       left = selectionAbsRect.left;
       top = selectionAbsRect.bottom + margin;
     } else if (
-      selectionAbsRect.right + margin + overlayWidth <= window.innerWidth &&
-      selectionAbsRect.top + overlayHeight <= window.innerHeight
-    ) {
-      left = selectionAbsRect.right + margin;
-      top = selectionAbsRect.top;
-    } else if (
       selectionAbsRect.left - margin - overlayWidth >= 0 &&
-      selectionAbsRect.top + overlayHeight <= window.innerHeight
+      selectionAbsRect.top + margin + overlayHeight <= popupRect.height
     ) {
       left = selectionAbsRect.left - margin - overlayWidth;
       top = selectionAbsRect.top;
     } else if (
-      selectionAbsRect.left - margin - overlayWidth >= 0 &&
+      selectionAbsRect.left + margin + overlayWidth <= popupRect.width &&
       selectionAbsRect.top - margin - overlayHeight >= 0
     ) {
-      left = selectionAbsRect.left - margin - overlayWidth;
+      left = selectionAbsRect.left;
       top = selectionAbsRect.top - margin - overlayHeight;
     } else {
-      left =
-        selectionAbsRect.left + (selectionAbsRect.width - overlayWidth) / 2;
-      top =
-        selectionAbsRect.top + (selectionAbsRect.height - overlayHeight) / 2;
-
-      left = Math.max(0, Math.min(left, window.innerWidth - overlayWidth));
-      top = Math.max(0, Math.min(top, window.innerHeight - overlayHeight));
+      left = selectionAbsRect.right - margin - overlayWidth;
+      top = selectionAbsRect.bottom - margin - overlayHeight;
     }
 
     const overlay = document.createElement("div");
@@ -217,9 +210,9 @@ class ImageExplainPopup {
     overlay.style.top = top + "px";
 
     overlay.classList.add("loading");
-    overlay.textContent = "Generating...";
+    overlay.textContent = "Fetching...";
 
-    document.body.appendChild(overlay);
+    this.element.appendChild(overlay);
     this.responsePopup = overlay;
   }
 
@@ -234,16 +227,21 @@ class ImageExplainPopup {
 
   removeResponsePopup() {
     if (this.responsePopup) {
+      this.responsePopup.classList.remove("loading");
       this.responsePopup.remove();
     }
 
+    this.content = "";
     this.responsePopup = null;
     this.isBeingProcessed = true;
+    this.isBeingInfered = false;
+    this.hasReceivedFirstToken = false;
   }
 
   remove() {
     if (this.responsePopup) {
       this.removeResponsePopup();
+
       return;
     }
 
@@ -260,5 +258,7 @@ class ImageExplainPopup {
     if (this.backdrop) {
       this.backdrop.remove();
     }
+
+    this.isBeingProcessed = false;
   }
 }

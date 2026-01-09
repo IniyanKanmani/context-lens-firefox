@@ -4,6 +4,7 @@ link.href = browser.runtime.getURL("src/popup.css");
 document.head.appendChild(link);
 
 let popupCounter = 0;
+let basePopupsIds = new Array();
 const popups = new Map();
 
 function removePopup(popupId) {
@@ -13,6 +14,10 @@ function removePopup(popupId) {
     popup.remove();
 
     if (!popup.isBeingProcessed) {
+      if (basePopupsIds[basePopupsIds.length - 1] === popupCounter) {
+        basePopupsIds.pop();
+      }
+
       popups.delete(popupId);
       popupCounter = popupId - 1;
     }
@@ -20,7 +25,7 @@ function removePopup(popupId) {
 }
 
 function removeBranchPopups(popupId) {
-  let idToRemove = [];
+  const idToRemove = [];
 
   for (const [id, popup] of popups) {
     if (id > popupId) {
@@ -33,11 +38,22 @@ function removeBranchPopups(popupId) {
   popupCounter = popupId;
 }
 
-function removeAllPopups() {
-  for (const [_, popup] of popups) {
-    popup.remove();
+function removeAllPopupsUntillLastBasePopup() {
+  if (basePopupsIds.length === 0) {
+    return;
   }
 
-  popups.clear();
-  popupCounter = 0;
+  const lastBasePopupId = basePopupsIds[basePopupsIds.length - 1];
+  const idToRemove = [];
+
+  for (const [id, popup] of popups) {
+    popup.remove();
+
+    if (id > lastBasePopupId) {
+      idToRemove.push(id);
+    }
+  }
+
+  idToRemove.forEach((id) => popups.delete(id));
+  popupCounter = lastBasePopupId;
 }

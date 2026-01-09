@@ -24,7 +24,7 @@ function handleLLMRequestFailure(popupId) {
 
   setTimeout(() => {
     popup.remove();
-    popup.isBeingProcessed = false;
+    popup.hasReceivedFirstToken = false;
     popups.delete(popupId);
   }, 3000);
 }
@@ -68,7 +68,12 @@ function handleLLMStreamClosed(popupId) {
 
     setTimeout(() => {
       targetElement.classList.remove("complete");
+      popup.hasReceivedFirstToken = false;
       popup.isBeingProcessed = false;
+
+      if (popup.type === "image-explain") {
+        popup.isBeingInfered = false;
+      }
     }, 750);
   }, 250);
 }

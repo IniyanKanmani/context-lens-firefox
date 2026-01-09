@@ -124,5 +124,6 @@ class ContextualExplainPopup {
 
   remove() {
     this.element.remove();
+    this.isBeingProcessed = false;
   }
 }

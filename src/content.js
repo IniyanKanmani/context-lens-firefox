@@ -26,12 +26,11 @@ document.addEventListener("keydown", (event) => {
       return;
     }
 
-    // if (lastPopup.isBeingProcessed) {
-    //   cancelOrCloseLastPopup();
-    // } else {
-    //   removeAllPopups();
-    // }
-    cancelOrCloseLastPopup();
+    if (lastPopup.isBeingProcessed) {
+      cancelOrCloseLastPopup();
+    } else {
+      removeAllPopupsUntillLastBasePopup();
+    }
   } else if (event.key === "Enter") {
     const lastPopup = popups.get(popupCounter);
 
@@ -39,8 +38,13 @@ document.addEventListener("keydown", (event) => {
       return;
     }
 
-    if (lastPopup.type === "image-explain" && lastPopup.isSelectionMade) {
-      lastPopup.cropImageSelection();
+    if (
+      lastPopup.type === "image-explain" &&
+      lastPopup.isBeingProcessed &&
+      lastPopup.isSelectionMade &&
+      !lastPopup.isBeingInfered
+    ) {
+      lastPopup.cropImageAndInfer();
     }
   }
 });
@@ -61,32 +65,26 @@ document.addEventListener("mousedown", (event) => {
   //     cancelOrCloseLastPopup();
   //   }
   //
-  //   removeAllPopups();
+  //   removeAllPopupsUntillLastBasePopup();
   //
   //   return;
   // }
 
-  if (!isInsidePopup) {
-    cancelOrCloseLastPopup();
-
-    return;
-  }
-
-  if (
-    isInsidePopup &&
-    lastPopup.type !== "image-explain" &&
-    elementId.startsWith("popup-")
-  ) {
-    const popupId = parseInt(elementId.split("-")[1]);
-
-    if (popupId !== popupCounter && lastPopup.isBeingProcessed) {
-      cancelOrCloseLastPopup();
-    }
-
-    removeBranchPopups(popupId);
-
-    return;
-  }
+  // if (
+  //   isInsidePopup &&
+  //   lastPopup.type !== "image-explain" &&
+  //   elementId.startsWith("popup-")
+  // ) {
+  //   const popupId = parseInt(elementId.split("-")[1]);
+  //
+  //   if (popupId !== popupCounter && lastPopup.isBeingProcessed) {
+  //     cancelOrCloseLastPopup();
+  //   }
+  //
+  //   removeBranchPopups(popupId);
+  //
+  //   return;
+  // }
 
   if (isInsidePopup && lastPopup.type === "image-explain") {
     if (
@@ -150,6 +148,10 @@ function handleTextExplainTrigger(type) {
   const range = selection.getRangeAt(0);
   const selectedText = selection.toString().trim();
 
+  if (popupId == 1) {
+    basePopupsIds.push(popupId);
+  }
+
   if (type === "quick-explain") {
     const popup = new QuickExplainPopup(popupId);
 
@@ -173,6 +175,8 @@ async function handleImageExplainTrigger(type, imageUri) {
   const popupId = ++popupCounter;
 
   if (type === "image-explain") {
+    basePopupsIds.push(popupId);
+
     const popup = new ImageExplainPopup(popupId);
     popup.create(imageUri);
     popups.set(popupId, popup);
@@ -182,36 +186,28 @@ async function handleImageExplainTrigger(type, imageUri) {
 function cancelOrCloseLastPopup() {
   const lastPopup = popups.get(popupCounter);
 
-  if (!lastPopup) {
+  if (lastPopup && !lastPopup.isBeingProcessed) {
     return;
   }
 
   if (lastPopup.type === "quick-explain") {
-    if (lastPopup.isBeingProcessed) {
+    sendMessage("WEB_CANCEL_STREAM", popupCounter, null, null);
+  } else if (lastPopup.type === "contextual-explain") {
+    if (!lastPopup.gotContextInput) {
+      removePopup(popupCounter);
+    } else {
       sendMessage("WEB_CANCEL_STREAM", popupCounter, null, null);
     }
-  } else if (lastPopup.type === "contextual-explain") {
-    if (lastPopup.isBeingProcessed) {
-      if (!lastPopup.gotContextInput) {
-        removePopup(popupCounter);
-      } else {
-        sendMessage("WEB_CANCEL_STREAM", popupCounter, null, null);
-      }
-    }
   } else if (lastPopup.type === "image-explain") {
-    if (lastPopup.isBeingProcessed) {
-      if (lastPopup.responsePopup) {
-        sendMessage("WEB_CANCEL_STREAM", popupCounter, null, null);
-      } else if (lastPopup.isSelectionMade) {
-        lastPopup.removeVisualSelection();
-      } else if (lastPopup.isMouseDown) {
-        lastPopup.stopVisualSelection();
-        lastPopup.removeVisualSelection();
-      } else {
-        removePopup(popupCounter);
-      }
+    if (lastPopup.isBeingInfered) {
+      sendMessage("WEB_CANCEL_STREAM", popupCounter, null, null);
+    } else if (lastPopup.isSelectionMade) {
+      lastPopup.removeVisualSelection();
+    } else if (lastPopup.isMouseDown) {
+      lastPopup.stopVisualSelection();
+      lastPopup.removeVisualSelection();
     } else {
-      lastPopup.removeResponsePopup();
+      removePopup(popupCounter);
     }
   }
 }
