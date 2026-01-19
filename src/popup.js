@@ -47,13 +47,20 @@ function removeAllPopupsUntillLastBasePopup() {
   const idToRemove = [];
 
   for (const [id, popup] of popups) {
-    popup.remove();
+    if (id >= lastBasePopupId) {
+      popup.remove();
 
-    if (id > lastBasePopupId) {
-      idToRemove.push(id);
+      if (!popup.isBeingProcessed) {
+        idToRemove.push(id);
+      }
     }
   }
 
   idToRemove.forEach((id) => popups.delete(id));
   popupCounter = lastBasePopupId;
+
+  if (idToRemove.includes(lastBasePopupId)) {
+    basePopupsIds.pop();
+    popupCounter = lastBasePopupId - 1;
+  }
 }

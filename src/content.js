@@ -60,31 +60,31 @@ document.addEventListener("mousedown", (event) => {
     return;
   }
 
-  // if (!isInsidePopup) {
-  //   if (lastPopup.isBeingProcessed) {
-  //     cancelOrCloseLastPopup();
-  //   }
-  //
-  //   removeAllPopupsUntillLastBasePopup();
-  //
-  //   return;
-  // }
+  if (!isInsidePopup) {
+    if (lastPopup.isBeingProcessed) {
+      cancelOrCloseLastPopup();
+    }
 
-  // if (
-  //   isInsidePopup &&
-  //   lastPopup.type !== "image-explain" &&
-  //   elementId.startsWith("popup-")
-  // ) {
-  //   const popupId = parseInt(elementId.split("-")[1]);
-  //
-  //   if (popupId !== popupCounter && lastPopup.isBeingProcessed) {
-  //     cancelOrCloseLastPopup();
-  //   }
-  //
-  //   removeBranchPopups(popupId);
-  //
-  //   return;
-  // }
+    removeAllPopupsUntillLastBasePopup();
+
+    return;
+  }
+
+  if (
+    isInsidePopup &&
+    lastPopup.type !== "image-explain" &&
+    elementId.startsWith("popup-")
+  ) {
+    const popupId = parseInt(elementId.split("-")[1]);
+
+    if (popupId !== popupCounter && lastPopup.isBeingProcessed) {
+      cancelOrCloseLastPopup();
+    }
+
+    removeBranchPopups(popupId);
+
+    return;
+  }
 
   if (isInsidePopup && lastPopup.type === "image-explain") {
     if (
