@@ -89,8 +89,8 @@ document.addEventListener("mousedown", (event) => {
   if (isInsidePopup && lastPopup.type === "image-explain") {
     if (
       lastPopup.isBeingProcessed &&
-      !lastPopup.isSelectionMade &&
-      !lastPopup.isMouseDown
+      !lastPopup.isMouseDown &&
+      !lastPopup.isSelectionMade
     ) {
       lastPopup.startVisualSelection(event.clientX, event.clientY);
 
@@ -109,7 +109,8 @@ document.addEventListener("mousemove", (event) => {
   if (
     lastPopup.type === "image-explain" &&
     lastPopup.isBeingProcessed &&
-    lastPopup.isMouseDown
+    lastPopup.isMouseDown &&
+    !lastPopup.isSelectionMade
   ) {
     lastPopup.updateVisualSelection(event.clientX, event.clientY);
   }
@@ -125,9 +126,11 @@ document.addEventListener("mouseup", (event) => {
   if (
     lastPopup.type === "image-explain" &&
     lastPopup.isBeingProcessed &&
-    lastPopup.isMouseDown
+    lastPopup.isMouseDown &&
+    !lastPopup.isSelectionMade
   ) {
     lastPopup.stopVisualSelection(event.clientX, event.clientY);
+    lastPopup.cropImageAndInfer();
   }
 });
 

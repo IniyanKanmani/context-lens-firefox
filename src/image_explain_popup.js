@@ -39,10 +39,6 @@ class ImageExplainPopup {
   }
 
   startVisualSelection(initialX, initialY) {
-    if (this.isSelectionMade) {
-      this.removeVisualSelection();
-    }
-
     this.isMouseDown = true;
     this.isSelectionMade = false;
     this.selectionRect = [initialX, initialY, initialX, initialY];

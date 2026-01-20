@@ -18,7 +18,7 @@
   user-select: text;
   white-space: pre-wrap;
   word-wrap: break-word;
-  z-index: 10000;
+  z-index: 10001;
   position: absolute;
 }
 
@@ -188,7 +188,7 @@
   min-height: 39px;
   max-height: 150px;
   overflow-y: auto;
-  z-index: 10003;
+  z-index: 10001;
   background: #222;
   color: white;
   border: 1px solid #666;
