@@ -86,6 +86,22 @@ document.addEventListener("mousedown", (event) => {
     return;
   }
 
+  if (
+    isInsidePopup &&
+    lastPopup.type !== "image-explain" &&
+    elementId.startsWith("image-popup-")
+  ) {
+    const popupId = parseInt(elementId.split("-")[2]);
+
+    if (popupId !== popupCounter && lastPopup.isBeingProcessed) {
+      cancelOrCloseLastPopup();
+    }
+
+    removeBranchPopups(popupId);
+
+    return;
+  }
+
   if (isInsidePopup && lastPopup.type === "image-explain") {
     if (
       lastPopup.isBeingProcessed &&

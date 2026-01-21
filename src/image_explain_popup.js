@@ -18,7 +18,7 @@ class ImageExplainPopup {
 
     const popup = document.createElement("div");
     popup.className = "context-lens-popup image";
-    popup.id = `popup-${this.popupId}`;
+    popup.id = `image-popup-${this.popupId}`;
 
     const img = document.createElement("img");
     img.src = imageUri;
@@ -149,20 +149,19 @@ class ImageExplainPopup {
   }
 
   createResponseOverlay() {
-    const popupRect = this.element.getBoundingClientRect();
+    const popupRectWindow = this.element.getBoundingClientRect();
 
-    const selectionLeft = parseFloat(this.selectionDiv.style.left);
-    const selectionTop = parseFloat(this.selectionDiv.style.top);
-    const selectionWidth = parseFloat(this.selectionDiv.style.width);
-    const selectionHeight = parseFloat(this.selectionDiv.style.height);
-
-    const selectionAbsRect = {
-      left: selectionLeft,
-      top: selectionTop,
-      right: selectionLeft + selectionWidth,
-      bottom: selectionTop + selectionHeight,
-      width: selectionWidth,
-      height: selectionHeight,
+    const selectionRectDims = {
+      left: parseFloat(this.selectionDiv.style.left),
+      top: parseFloat(this.selectionDiv.style.top),
+      right:
+        parseFloat(this.selectionDiv.style.left) +
+        parseFloat(this.selectionDiv.style.width),
+      bottom:
+        parseFloat(this.selectionDiv.style.top) +
+        parseFloat(this.selectionDiv.style.height),
+      width: parseFloat(this.selectionDiv.style.width),
+      height: parseFloat(this.selectionDiv.style.height),
     };
 
     const overlayWidth = 400;
@@ -172,36 +171,39 @@ class ImageExplainPopup {
     let left, top;
 
     if (
-      selectionAbsRect.right + margin + overlayWidth <= popupRect.width &&
-      selectionAbsRect.top + margin + overlayHeight <= popupRect.height
+      selectionRectDims.right + 2 * margin + overlayWidth <=
+        popupRectWindow.width &&
+      selectionRectDims.top + margin + overlayHeight <= popupRectWindow.height
     ) {
-      left = selectionAbsRect.right + margin;
-      top = selectionAbsRect.top;
+      left = selectionRectDims.right + margin;
+      top = selectionRectDims.top;
     } else if (
-      selectionAbsRect.left + margin + overlayWidth <= popupRect.width &&
-      selectionAbsRect.bottom + margin + overlayHeight <= popupRect.height
+      selectionRectDims.left + margin + overlayWidth <= popupRectWindow.width &&
+      selectionRectDims.bottom + 2 * margin + overlayHeight <=
+        popupRectWindow.height
     ) {
-      left = selectionAbsRect.left;
-      top = selectionAbsRect.bottom + margin;
+      left = selectionRectDims.left;
+      top = selectionRectDims.bottom + margin;
     } else if (
-      selectionAbsRect.left - margin - overlayWidth >= 0 &&
-      selectionAbsRect.top + margin + overlayHeight <= popupRect.height
+      selectionRectDims.left - 2 * margin - overlayWidth >= 0 &&
+      selectionRectDims.top + margin + overlayHeight <= popupRectWindow.height
     ) {
-      left = selectionAbsRect.left - margin - overlayWidth;
-      top = selectionAbsRect.top;
+      left = selectionRectDims.left - margin - overlayWidth;
+      top = selectionRectDims.top;
     } else if (
-      selectionAbsRect.left + margin + overlayWidth <= popupRect.width &&
-      selectionAbsRect.top - margin - overlayHeight >= 0
+      selectionRectDims.left + margin + overlayWidth <= popupRectWindow.width &&
+      selectionRectDims.top - 2 * margin - overlayHeight >= 0
     ) {
-      left = selectionAbsRect.left;
-      top = selectionAbsRect.top - margin - overlayHeight;
+      left = selectionRectDims.left;
+      top = selectionRectDims.top - margin - overlayHeight;
     } else {
-      left = selectionAbsRect.right - margin - overlayWidth;
-      top = selectionAbsRect.bottom - margin - overlayHeight;
+      left = selectionRectDims.right - margin - overlayWidth;
+      top = selectionRectDims.bottom - margin - overlayHeight;
     }
 
     const overlay = document.createElement("div");
     overlay.className = "context-lens-popup image-response-overlay";
+    overlay.id = `popup-${this.popupId}`;
     overlay.style.left = left + "px";
     overlay.style.top = top + "px";
 

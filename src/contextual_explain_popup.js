@@ -8,59 +8,48 @@ class ContextualExplainPopup {
   }
 
   create(range, selectedText) {
+    const rangeRectDims = range.getBoundingClientRect();
+
+    const overlayWidth = 400;
+    const overlayHeight = 150;
+    const margin = 5;
+
+    let left, top;
+
+    if (
+      rangeRectDims.left + margin + overlayWidth <= window.innerWidth &&
+      rangeRectDims.bottom + 2 * margin + overlayHeight <= window.innerHeight
+    ) {
+      left = rangeRectDims.left;
+      top = rangeRectDims.bottom + margin;
+    } else if (
+      rangeRectDims.right + 2 * margin + overlayWidth <= window.innerWidth &&
+      rangeRectDims.top + margin + overlayHeight <= window.innerHeight
+    ) {
+      left = rangeRectDims.right + margin;
+      top = rangeRectDims.top;
+    } else if (
+      rangeRectDims.left - 2 * margin - overlayWidth >= 0 &&
+      rangeRectDims.top + margin + overlayHeight <= window.innerHeight
+    ) {
+      left = rangeRectDims.left - margin - overlayWidth;
+      top = rangeRectDims.top;
+    } else if (
+      rangeRectDims.left + margin + overlayWidth <= window.innerWidth &&
+      rangeRectDims.top - 2 * margin - overlayHeight >= 0
+    ) {
+      left = rangeRectDims.left;
+      top = rangeRectDims.top - margin - overlayHeight;
+    } else {
+      left = rangeRectDims.right - margin - overlayWidth;
+      top = rangeRectDims.bottom - margin - overlayHeight;
+    }
+
     const popup = document.createElement("div");
     popup.className = "context-lens-popup context-input";
     popup.id = `popup-${this.popupId}`;
-
-    const rect = range.getBoundingClientRect();
-    let noPageVSpace = false;
-
-    // Vertical Calculation
-    let top;
-    const estimatedHeight = 80;
-    const spaceAbove = rect.top;
-    const spaceBetweenV = rect.bottom - rect.top;
-    const spaceBelow = window.innerHeight - rect.bottom;
-
-    if (spaceBelow >= estimatedHeight) {
-      top = rect.bottom + 5;
-    } else if (spaceAbove >= estimatedHeight) {
-      top = rect.top - estimatedHeight - 5;
-    } else if (spaceBetweenV >= estimatedHeight) {
-      top = rect.bottom - estimatedHeight - 5;
-      noPageVSpace = true;
-    }
-
-    if (top <= 0) top = 5;
-    if (top + estimatedHeight >= window.innerHeight)
-      top = window.innerHeight - estimatedHeight - 5;
-
-    top += window.scrollY;
-    popup.style.top = top + "px";
-
-    // Horizontal Calculation
-    let left;
-    const estimatedWidth = 405;
-    const spaceLeft = rect.left;
-    const spaceBetweenH = rect.right - rect.left;
-    const spaceRight = window.innerWidth - rect.right;
-
-    if (noPageVSpace) {
-      left = rect.right - estimatedWidth - 5;
-    } else if (spaceBetweenH >= estimatedWidth) {
-      left = rect.left;
-    } else if (spaceBetweenH + spaceRight >= estimatedWidth) {
-      left = rect.left;
-    } else if (spaceLeft >= estimatedWidth) {
-      left = window.innerWidth - estimatedWidth - 5;
-    }
-
-    if (left <= 0) left = 5;
-    if (left + estimatedWidth >= window.innerWidth)
-      left = window.innerWidth - estimatedWidth - 5;
-
-    left += window.scrollX;
     popup.style.left = left + "px";
+    popup.style.top = top + "px";
 
     const textarea = document.createElement("textarea");
     textarea.placeholder = "Additional context...";
@@ -74,9 +63,7 @@ class ContextualExplainPopup {
     popup.appendChild(textarea);
     popup.appendChild(button);
     document.body.appendChild(popup);
-
     this.element = popup;
-
     this.selectedText = selectedText;
 
     // Hack to give textarea focus
