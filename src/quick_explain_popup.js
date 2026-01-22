@@ -45,8 +45,8 @@ class QuickExplainPopup {
     }
 
     const popup = document.createElement("div");
-    popup.className = "context-lens-popup";
-    popup.id = `popup-${this.popupId}`;
+    popup.className = "context-lens response-popup";
+    popup.id = `text-popup-${this.popupId}`;
     popup.style.left = left + "px";
     popup.style.top = top + "px";
 

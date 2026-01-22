@@ -46,8 +46,8 @@ class ContextualExplainPopup {
     }
 
     const popup = document.createElement("div");
-    popup.className = "context-lens-popup context-input";
-    popup.id = `popup-${this.popupId}`;
+    popup.className = "context-lens context-input";
+    popup.id = `text-popup-${this.popupId}`;
     popup.style.left = left + "px";
     popup.style.top = top + "px";
 
@@ -105,6 +105,7 @@ class ContextualExplainPopup {
 
     this.element.innerHTML = "";
     this.element.classList.remove("context-input");
+    this.element.classList.add("response-popup");
     this.element.classList.add("loading");
     this.element.textContent = "Fetching...";
   }

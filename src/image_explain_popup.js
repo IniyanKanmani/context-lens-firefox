@@ -14,10 +14,11 @@ class ImageExplainPopup {
     const backdrop = document.createElement("div");
     backdrop.className = "popup-backdrop";
     document.body.appendChild(backdrop);
+    document.body.classList.add("scroll-locked");
     this.backdrop = backdrop;
 
     const popup = document.createElement("div");
-    popup.className = "context-lens-popup image";
+    popup.className = "context-lens image-popup";
     popup.id = `image-popup-${this.popupId}`;
 
     const img = document.createElement("img");
@@ -31,7 +32,7 @@ class ImageExplainPopup {
     document.body.appendChild(popup);
 
     const closeBtn = document.createElement("button");
-    closeBtn.className = "context-lens-popup image close-btn";
+    closeBtn.className = "context-lens image-popup close-btn";
     closeBtn.textContent = "×";
     closeBtn.addEventListener("click", () => removePopup(this.popupId));
     document.body.appendChild(closeBtn);
@@ -44,7 +45,7 @@ class ImageExplainPopup {
     this.selectionRect = [initialX, initialY, initialX, initialY];
 
     this.selectionDiv = document.createElement("div");
-    this.selectionDiv.className = "context-lens-popup image selection-rect";
+    this.selectionDiv.className = "context-lens image-popup selection-rect";
     this.element.appendChild(this.selectionDiv);
 
     this.updateSelectionDivDimensions();
@@ -202,8 +203,8 @@ class ImageExplainPopup {
     }
 
     const overlay = document.createElement("div");
-    overlay.className = "context-lens-popup image-response-overlay";
-    overlay.id = `popup-${this.popupId}`;
+    overlay.className = "context-lens response-popup";
+    overlay.id = `text-popup-${this.popupId}`;
     overlay.style.left = left + "px";
     overlay.style.top = top + "px";
 
@@ -254,6 +255,7 @@ class ImageExplainPopup {
     this.element.remove();
 
     if (this.backdrop) {
+      document.body.classList.remove("scroll-locked");
       this.backdrop.remove();
     }
 

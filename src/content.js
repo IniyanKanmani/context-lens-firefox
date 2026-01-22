@@ -51,7 +51,7 @@ document.addEventListener("keydown", (event) => {
 
 document.addEventListener("mousedown", (event) => {
   const clickedElement = event.target;
-  const isInsidePopup = clickedElement.closest(".context-lens-popup");
+  const isInsidePopup = clickedElement.closest(".context-lens");
   const elementId = clickedElement.id;
 
   const lastPopup = popups.get(popupCounter);
@@ -73,9 +73,9 @@ document.addEventListener("mousedown", (event) => {
   if (
     isInsidePopup &&
     lastPopup.type !== "image-explain" &&
-    elementId.startsWith("popup-")
+    elementId.startsWith("text-popup-")
   ) {
-    const popupId = parseInt(elementId.split("-")[1]);
+    const popupId = parseInt(elementId.split("-")[2]);
 
     if (popupId !== popupCounter && lastPopup.isBeingProcessed) {
       cancelOrCloseLastPopup();
