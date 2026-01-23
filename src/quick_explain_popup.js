@@ -44,6 +44,9 @@ class QuickExplainPopup {
       top = rangeRectDims.bottom - margin - overlayHeight;
     }
 
+    left += window.scrollX;
+    top += window.scrollY;
+
     const popup = document.createElement("div");
     popup.className = "context-lens response-popup";
     popup.id = `text-popup-${this.popupId}`;

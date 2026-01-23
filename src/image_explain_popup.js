@@ -244,12 +244,12 @@ class ImageExplainPopup {
       return;
     }
 
-    if (this.closeBtn) {
-      this.closeBtn.remove();
-    }
-
     if (this.selectionDiv) {
       this.selectionDiv.remove();
+    }
+
+    if (this.closeBtn) {
+      this.closeBtn.remove();
     }
 
     this.element.remove();

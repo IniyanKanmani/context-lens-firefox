@@ -45,6 +45,9 @@ class ContextualExplainPopup {
       top = rangeRectDims.bottom - margin - overlayHeight;
     }
 
+    left += window.scrollX;
+    top += window.scrollY;
+
     const popup = document.createElement("div");
     popup.className = "context-lens context-input";
     popup.id = `text-popup-${this.popupId}`;

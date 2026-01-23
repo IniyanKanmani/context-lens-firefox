@@ -25,7 +25,12 @@ function handleLLMRequestFailure(popupId) {
   setTimeout(() => {
     popup.remove();
     popup.hasReceivedFirstToken = false;
-    popups.delete(popupId);
+
+    if (popup.type === "image-explain") {
+      popup.isBeingInfered = false;
+    } else {
+      popups.delete(popupId);
+    }
   }, 3000);
 }
 
