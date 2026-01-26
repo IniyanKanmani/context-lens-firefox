@@ -58,8 +58,18 @@ export async function invokeQuickLLM(tabId, popupId, selectedText) {
               ],
             },
           ],
+          reasoning: {
+            effort: "medium",
+          },
+          max_tokens: 1000,
           provider: {
-            order: ["hyperbolic", "novita/bf16", "phala"],
+            order: [
+              "hyperbolic",
+              "deepinfra/bf16",
+              "phala",
+              "novita/bf16",
+              "together",
+            ],
             allow_fallbacks: true,
             data_collection: "deny",
             zdr: true,
@@ -130,8 +140,18 @@ export async function invokeContextualLLM(
               ],
             },
           ],
+          reasoning: {
+            effort: "medium",
+          },
+          max_tokens: 1000,
           provider: {
-            order: ["hyperbolic", "novita/bf16", "phala"],
+            order: [
+              "hyperbolic",
+              "deepinfra/bf16",
+              "phala",
+              "novita/bf16",
+              "together",
+            ],
             allow_fallbacks: true,
             data_collection: "deny",
             zdr: true,
@@ -200,11 +220,13 @@ export async function invokeImageLLM(tabId, popupId, imageUri) {
               ],
             },
           ],
+          reasoning: {
+            effort: "medium",
+          },
+          max_tokens: 2000,
           provider: {
-            order: ["deepinfra/fp8"],
             allow_fallbacks: true,
-            // data_collection: "deny",
-            // zdr: true,
+            data_collection: "deny",
             sort: "latency",
           },
         }),
