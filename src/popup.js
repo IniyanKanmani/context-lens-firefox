@@ -1,66 +1,145 @@
-const link = document.createElement("link");
-link.rel = "stylesheet";
-link.href = browser.runtime.getURL("src/popup.css");
-document.head.appendChild(link);
+class Popups {
+  constructor() {
+    this.counter = 0;
+    this.popups = new Map();
+    this.basePopups = new Array();
+  }
 
-let popupCounter = 0;
-let basePopupsIds = new Array();
-const popups = new Map();
+  getPopup(id) {
+    return this.popups.get(id);
+  }
 
-function removePopup(popupId) {
-  const popup = popups.get(popupId);
+  getLastPopup() {
+    const popup = this.popups.get(this.counter);
 
-  if (popup) {
-    popup.remove();
+    if (!popup) {
+      return null;
+    }
 
-    if (!popup.isBeingProcessed) {
-      if (basePopupsIds[basePopupsIds.length - 1] === popupCounter) {
-        basePopupsIds.pop();
+    return popup;
+  }
+
+  createQuickExplainPopup(range, selectedText) {
+    const popupId = ++this.counter;
+
+    if (popupId == 1) {
+      this.basePopups.push(popupId);
+    }
+
+    const popup = new QuickExplainPopup(popupId);
+    popup.create(range, selectedText);
+    this.popups.set(popupId, popup);
+  }
+
+  createContextualExplainPopup(range, selectedText) {
+    const popupId = ++this.counter;
+
+    if (popupId == 1) {
+      this.basePopups.push(popupId);
+    }
+
+    const popup = new ContextualExplainPopup(popupId);
+    popup.create(range, selectedText);
+    this.popups.set(popupId, popup);
+  }
+
+  createImageExplainPopup(imageUri) {
+    const popupId = ++this.counter;
+    this.basePopups.push(popupId);
+
+    const popup = new ImageExplainPopup(popupId);
+    popup.create(imageUri);
+    this.popups.set(popupId, popup);
+  }
+
+  cancelOrCloseLastPopup() {
+    const lastPopup = popups.getLastPopup();
+
+    if (lastPopup && !lastPopup.isBeingProcessed) {
+      return;
+    }
+
+    if (lastPopup.type === "quick-explain") {
+      sendMessage("WEB_CANCEL_STREAM", this.counter, null, null);
+    } else if (lastPopup.type === "contextual-explain") {
+      if (!lastPopup.gotContextInput) {
+        this.removePopup(this.counter);
+      } else {
+        sendMessage("WEB_CANCEL_STREAM", this.counter, null, null);
       }
-
-      popups.delete(popupId);
-      popupCounter = popupId - 1;
-    }
-  }
-}
-
-function removeBranchPopups(popupId) {
-  const idToRemove = [];
-
-  for (const [id, popup] of popups) {
-    if (id > popupId) {
-      popup.remove();
-      idToRemove.push(id);
+    } else if (lastPopup.type === "image-explain") {
+      if (lastPopup.isBeingInfered) {
+        sendMessage("WEB_CANCEL_STREAM", this.counter, null, null);
+      } else if (lastPopup.isSelectionMade) {
+        lastPopup.removeVisualSelection();
+      } else if (lastPopup.isMouseDown) {
+        lastPopup.stopVisualSelection();
+        lastPopup.removeVisualSelection();
+      } else {
+        this.removePopup(this.counter);
+      }
     }
   }
 
-  idToRemove.forEach((id) => popups.delete(id));
-  popupCounter = popupId;
-}
-
-function removeAllPopupsUntillLastBasePopup() {
-  if (basePopupsIds.length === 0) {
-    return;
+  deletePopup(id) {
+    this.popups.delete(id);
   }
 
-  const lastBasePopupId = basePopupsIds[basePopupsIds.length - 1];
-  const idToRemove = [];
+  removePopup(popupId) {
+    const popup = this.popups.get(popupId);
 
-  for (const [id, popup] of popups) {
-    if (id >= lastBasePopupId) {
+    if (popup) {
       popup.remove();
 
       if (!popup.isBeingProcessed) {
-        idToRemove.push(id);
+        if (this.basePopups[this.basePopups.length - 1] === this.counter) {
+          this.basePopups.pop();
+        }
+
+        this.popups.delete(popupId);
+        this.counter = popupId - 1;
       }
     }
   }
 
-  idToRemove.forEach((id) => popups.delete(id));
-  popupCounter = lastBasePopupId;
+  removeBranchPopups(popupId) {
+    const idToRemove = [];
 
-  if (idToRemove.includes(lastBasePopupId)) {
-    basePopupsIds.pop();
-    popupCounter = lastBasePopupId - 1;
+    for (const [id, popup] of this.popups) {
+      if (id > popupId) {
+        popup.remove();
+        idToRemove.push(id);
+      }
+    }
+
+    idToRemove.forEach((id) => this.popups.delete(id));
+    this.counter = popupId;
+  }
+
+  removeAllPopupsUntillLastBasePopup() {
+    if (this.basePopups.length === 0) {
+      return;
+    }
+
+    const lastBasePopupId = this.basePopups[this.basePopups.length - 1];
+    const idToRemove = [];
+
+    for (const [id, popup] of this.popups) {
+      if (id >= lastBasePopupId) {
+        popup.remove();
+
+        if (!popup.isBeingProcessed) {
+          idToRemove.push(id);
+        }
+      }
+    }
+
+    idToRemove.forEach((id) => this.popups.delete(id));
+    this.counter = lastBasePopupId;
+
+    if (idToRemove.includes(lastBasePopupId)) {
+      this.basePopups.pop();
+      this.counter = lastBasePopupId - 1;
+    }
   }
 }

@@ -1,5 +1,5 @@
 function handleLLMRequestSuccess(popupId) {
-  const popup = popups.get(popupId);
+  const popup = popups.getPopup(popupId);
 
   if (!popup) {
     return;
@@ -11,7 +11,7 @@ function handleLLMRequestSuccess(popupId) {
 }
 
 function handleLLMRequestFailure(popupId) {
-  const popup = popups.get(popupId);
+  const popup = popups.getPopup(popupId);
 
   if (!popup) {
     return;
@@ -23,19 +23,12 @@ function handleLLMRequestFailure(popupId) {
   targetElement.textContent = "Request failed. Please retry...";
 
   setTimeout(() => {
-    popup.remove();
-    popup.hasReceivedFirstToken = false;
-
-    if (popup.type === "image-explain") {
-      popup.isBeingInfered = false;
-    } else {
-      popups.delete(popupId);
-    }
+    popups.removePopup(popupId);
   }, 3000);
 }
 
 function handleLLMStreamChunk(popupId, content) {
-  const popup = popups.get(popupId);
+  const popup = popups.getPopup(popupId);
 
   if (!popup) {
     return;
@@ -58,8 +51,18 @@ function handleLLMStreamChunk(popupId, content) {
   targetElement.textContent = popup.content;
 }
 
+function handleLLMStreamCancel(popupId) {
+  const popup = popups.getPopup(popupId);
+
+  if (!popup) {
+    return;
+  }
+
+  popups.removePopup(popupId);
+}
+
 function handleLLMStreamClosed(popupId) {
-  const popup = popups.get(popupId);
+  const popup = popups.getPopup(popupId);
 
   if (!popup) {
     return;

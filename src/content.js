@@ -1,3 +1,10 @@
+const link = document.createElement("link");
+link.rel = "stylesheet";
+link.href = browser.runtime.getURL("src/popup.css");
+document.head.appendChild(link);
+
+const popups = new Popups();
+
 browser.runtime.onMessage.addListener((message, _, __) => {
   if (message.type === "SER_QUICK_EXPLAIN_KEY_TRIGGERED") {
     handleTextExplainTrigger("quick-explain");
@@ -12,7 +19,7 @@ browser.runtime.onMessage.addListener((message, _, __) => {
   } else if (message.type === "SER_LLM_STREAM_CHUNK") {
     handleLLMStreamChunk(message.popupId, message.content);
   } else if (message.type === "SER_LLM_STREAM_CANCELED") {
-    removePopup(message.popupId);
+    handleLLMStreamCancel(message.popupId);
   } else if (message.type === "SER_LLM_STREAM_CLOSED") {
     handleLLMStreamClosed(message.popupId);
   }
@@ -20,19 +27,19 @@ browser.runtime.onMessage.addListener((message, _, __) => {
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
-    const lastPopup = popups.get(popupCounter);
+    const lastPopup = popups.getLastPopup();
 
     if (!lastPopup) {
       return;
     }
 
     if (lastPopup.isBeingProcessed) {
-      cancelOrCloseLastPopup();
+      popups.cancelOrCloseLastPopup();
     } else {
-      removeAllPopupsUntillLastBasePopup();
+      popups.removeAllPopupsUntillLastBasePopup();
     }
   } else if (event.key === "Enter") {
-    const lastPopup = popups.get(popupCounter);
+    const lastPopup = popups.getLastPopup();
 
     if (!lastPopup) {
       return;
@@ -54,7 +61,7 @@ document.addEventListener("mousedown", (event) => {
   const isInsidePopup = clickedElement.closest(".context-lens");
   const elementId = clickedElement.id;
 
-  const lastPopup = popups.get(popupCounter);
+  const lastPopup = popups.getLastPopup();
 
   if (!lastPopup) {
     return;
@@ -62,10 +69,10 @@ document.addEventListener("mousedown", (event) => {
 
   if (!isInsidePopup) {
     if (lastPopup.isBeingProcessed) {
-      cancelOrCloseLastPopup();
+      popups.cancelOrCloseLastPopup();
     }
 
-    removeAllPopupsUntillLastBasePopup();
+    popups.removeAllPopupsUntillLastBasePopup();
 
     return;
   }
@@ -77,11 +84,11 @@ document.addEventListener("mousedown", (event) => {
   ) {
     const popupId = parseInt(elementId.split("-")[2]);
 
-    if (popupId !== popupCounter && lastPopup.isBeingProcessed) {
-      cancelOrCloseLastPopup();
+    if (popupId !== popups.counter && lastPopup.isBeingProcessed) {
+      popups.cancelOrCloseLastPopup();
     }
 
-    removeBranchPopups(popupId);
+    popups.removeBranchPopups(popupId);
 
     return;
   }
@@ -93,11 +100,11 @@ document.addEventListener("mousedown", (event) => {
   ) {
     const popupId = parseInt(elementId.split("-")[2]);
 
-    if (popupId !== popupCounter && lastPopup.isBeingProcessed) {
-      cancelOrCloseLastPopup();
+    if (popupId !== popups.counter && lastPopup.isBeingProcessed) {
+      popups.cancelOrCloseLastPopup();
     }
 
-    removeBranchPopups(popupId);
+    popups.removeBranchPopups(popupId);
 
     return;
   }
@@ -116,7 +123,7 @@ document.addEventListener("mousedown", (event) => {
 });
 
 document.addEventListener("mousemove", (event) => {
-  const lastPopup = popups.get(popupCounter);
+  const lastPopup = popups.getLastPopup();
 
   if (!lastPopup) {
     return;
@@ -133,7 +140,7 @@ document.addEventListener("mousemove", (event) => {
 });
 
 document.addEventListener("mouseup", (event) => {
-  const lastPopup = popups.get(popupCounter);
+  const lastPopup = popups.getLastPopup();
 
   if (!lastPopup) {
     return;
@@ -151,7 +158,7 @@ document.addEventListener("mouseup", (event) => {
 });
 
 function handleTextExplainTrigger(type) {
-  const lastPopup = popups.get(popupCounter);
+  const lastPopup = popups.getLastPopup();
 
   if (lastPopup && lastPopup.isBeingProcessed) {
     return;
@@ -163,71 +170,25 @@ function handleTextExplainTrigger(type) {
     return;
   }
 
-  const popupId = ++popupCounter;
   const range = selection.getRangeAt(0);
   const selectedText = selection.toString().trim();
 
-  if (popupId == 1) {
-    basePopupsIds.push(popupId);
-  }
-
   if (type === "quick-explain") {
-    const popup = new QuickExplainPopup(popupId);
-
-    popup.create(range, selectedText);
-    popups.set(popupId, popup);
+    popups.createQuickExplainPopup(range, selectedText);
   } else if (type === "contextual-explain") {
-    const popup = new ContextualExplainPopup(popupId);
-
-    popup.create(range, selectedText);
-    popups.set(popupId, popup);
+    popups.createContextualExplainPopup(range, selectedText);
   }
 }
 
 async function handleImageExplainTrigger(type, imageUri) {
-  const lastPopup = popups.get(popupCounter);
+  const lastPopup = popups.getLastPopup();
 
   if (lastPopup && lastPopup.isBeingProcessed) {
     return;
   }
 
-  const popupId = ++popupCounter;
-
   if (type === "image-explain") {
-    basePopupsIds.push(popupId);
-
-    const popup = new ImageExplainPopup(popupId);
-    popup.create(imageUri);
-    popups.set(popupId, popup);
-  }
-}
-
-function cancelOrCloseLastPopup() {
-  const lastPopup = popups.get(popupCounter);
-
-  if (lastPopup && !lastPopup.isBeingProcessed) {
-    return;
-  }
-
-  if (lastPopup.type === "quick-explain") {
-    sendMessage("WEB_CANCEL_STREAM", popupCounter, null, null);
-  } else if (lastPopup.type === "contextual-explain") {
-    if (!lastPopup.gotContextInput) {
-      removePopup(popupCounter);
-    } else {
-      sendMessage("WEB_CANCEL_STREAM", popupCounter, null, null);
-    }
-  } else if (lastPopup.type === "image-explain") {
-    if (lastPopup.isBeingInfered) {
-      sendMessage("WEB_CANCEL_STREAM", popupCounter, null, null);
-    } else if (lastPopup.isSelectionMade) {
-      lastPopup.removeVisualSelection();
-    } else if (lastPopup.isMouseDown) {
-      lastPopup.stopVisualSelection();
-      lastPopup.removeVisualSelection();
-    } else {
-      removePopup(popupCounter);
-    }
+    popups.createImageExplainPopup(imageUri);
   }
 }
 

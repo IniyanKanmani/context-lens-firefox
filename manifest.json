@@ -24,8 +24,8 @@
     {
       "matches": ["*://*/*"],
       "js": [
-        "src/content.js",
         "src/popup.js",
+        "src/content.js",
         "src/quick_explain_popup.js",
         "src/contextual_explain_popup.js",
         "src/image_explain_popup.js",
