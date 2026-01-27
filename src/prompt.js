@@ -13,8 +13,8 @@ export const quickExplainSystemPrompt = `
 
   ## Format
     - Responses must fit in a compact popup window
-    - Limit to 1-2 sentences maximum (expand to 4-5 lines for summarization)
-    - Keep brief: under 50 tokens for definitions, up to 200 tokens for summarization
+    - Limit to 1-2 sentences maximum (expand to 3-4 lines for summarization)
+    - Keep brief: under 50 tokens for definitions, up to 100 tokens for summarization
     - Use plain text only, no headers, lists, tables, bold, italics, or other Markdown formatting. Pure, readable txt
     - Keep output within a max of 2 paragraphs and reduce use of new line characters
 `;
