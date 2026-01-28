@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Context Lens",
-  "version": "0.2",
-  "description": "Firefox add-on for AI-powered contextual text explanations. Just select text, hit keybind and get insights on popup in same tab",
+  "version": "0.3",
+  "description": "Firefox add-on for AI-powered contextual text and image explanations. Just select text or use image inference, hit keybind and get insights on popup in same tab",
   "author": "Iniyan Kanmani",
   "homepage_url": "https://github.com/IniyanKanmani/context-lens-firefox",
   "icons": {
