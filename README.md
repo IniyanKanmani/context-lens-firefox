@@ -1,13 +1,15 @@
 # ContextLens-Firefox
 
-**ContextLens** is a Firefox Addon designed to bring contextual AI assistance directly to your browser.
+**ContextLens** is a Firefox Addon designed to bring AI assistance directly to your browser. The Addon is inspired by the Android feature `Google Circle to Search`
 
-Simply highlight any text on a webpage, use Shift+Alt+E for instant explanation or Shift+Alt+C for contextual explanation with additional input, and ContextLens will display an insightful reply, helping you understand or summarize the highlighted content without leaving your current tab in a popup.
+Simply highlight any text on a webpage, use Shift+Alt+E for instant explanation or Shift+Alt+C for contextual explanation with additional input, or use Shift+Alt+I for image inference capabilities, and ContextLens will display an insightful reply, helping you understand or summarize the highlighted content without leaving your current tab in a popup.
 
 ## Usage
 
 - Highlight text on any webpage.
-- Press Shift+Alt+E for a quick AI explanation or Shift+Alt+C to provide additional context before getting the AI response.
+- Press Shift+Alt+E for a quick AI explanation
+- Press Shift+Alt+C to provide additional context before getting the AI response.
+- Press Shift+Alt+I to provide Image context for AI response.
 - A popup will display the AI response without leaving the page.
 
 ## Dev Installation
@@ -32,16 +34,15 @@ Simply highlight any text on a webpage, use Shift+Alt+E for instant explanation 
 
 ## Privacy
 
-This extension sends highlighted text to [OpenRouter](https://openrouter.ai) for processing. By default the selected LLM providers are set to not collect data and who has agreed to ZDR (Zero Data Retention) policy.
+This extension sends highlighted text to [OpenRouter](https://openrouter.ai) for processing. By default the selected LLM providers are set to not collect data that is being sent for inference.
 
 ## Future Plans
 
 - [x] **Customizable Keyboard Shortcuts**: Allow users to set their preferred key combination to trigger the extension.
 - [x] **Additional Context Input**: Include a text field for users to provide extra context beyond the selected text.
-- [ ] **Screenshot Integration**: Enable capturing and using webpage screenshots as supplementary context for AI queries.
+- [x] **Image Inference**: Enable AI-powered image analysis and explanation capabilities.
+- [ ] **BYOK**: Bring Your own Key to advanced AI Models for Inference.
 
-## Contributing
-
-### Reporting Issues
+## Reporting Issues
 
 If you encounter any bugs or have feature requests, please create an issue on our [GitHub repository](https://github.com/IniyanKanmani/context-lens-firefox/issues).
