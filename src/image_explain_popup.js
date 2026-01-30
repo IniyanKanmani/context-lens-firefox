@@ -1,15 +1,85 @@
+/**
+ * Image explain popup class for the Context Lens Firefox extension.
+ *
+ * This class provides a modal interface for selecting regions of a webpage screenshot
+ * and sending them to a vision-capable LLM for analysis. It supports visual selection
+ * via mouse drag, canvas-based image cropping, and overlay response display.
+ *
+ * @class ImageExplainPopup
+ * @classdesc Popup for visual selection and AI analysis of webpage regions
+ */
 class ImageExplainPopup {
+  /**
+   * Creates a new ImageExplainPopup instance.
+   *
+   * @constructor
+   * @param {number} popupId - Unique identifier for this popup instance
+   */
   constructor(popupId) {
+    /**
+     * Popup type identifier.
+     * @type {string}
+     * @default "image-explain"
+     */
     this.type = "image-explain";
+
+    /**
+     * Unique popup identifier.
+     * @type {number}
+     */
     this.popupId = popupId;
+
+    /**
+     * Processing state flag. True during selection and LLM processing.
+     * @type {boolean}
+     * @default true
+     */
     this.isBeingProcessed = true;
+
+    /**
+     * Flag indicating if LLM inference is in progress.
+     * Prevents duplicate inference requests.
+     * @type {boolean}
+     * @default false
+     */
     this.isBeingInfered = false;
+
+    /**
+     * Flag tracking if mouse is currently down (dragging in progress).
+     * @type {boolean}
+     * @default false
+     */
     this.isMouseDown = false;
+
+    /**
+     * Rectangle coordinates for visual selection [x1, y1, x2, y2] in viewport coordinates.
+     * @type {number[]|null}
+     * @default null
+     */
     this.selectionRect = null;
+
+    /**
+     * Flag indicating if a selection has been finalized (mouse released).
+     * @type {boolean}
+     * @default false
+     */
     this.isSelectionMade = false;
+
+    /**
+     * Flag indicating if first token has been received from LLM stream.
+     * @type {boolean}
+     * @default false
+     */
     this.hasReceivedFirstToken = false;
   }
 
+  /**
+   * Creates and displays the image popup with modal backdrop.
+   *
+   * @method create
+   * @param {string} imageUri - Base64-encoded data URI of the captured tab screenshot
+   * @returns {void}
+   */
   create(imageUri) {
     const backdrop = document.createElement("div");
     backdrop.className = "popup-backdrop";
@@ -39,6 +109,14 @@ class ImageExplainPopup {
     this.closeBtn = closeBtn;
   }
 
+  /**
+   * Initiates visual selection mode when user starts dragging.
+   *
+   * @method startVisualSelection
+   * @param {number} initialX - Initial mouse X coordinate (viewport)
+   * @param {number} initialY - Initial mouse Y coordinate (viewport)
+   * @returns {void}
+   */
   startVisualSelection(initialX, initialY) {
     this.isMouseDown = true;
     this.isSelectionMade = false;
@@ -51,6 +129,14 @@ class ImageExplainPopup {
     this.updateSelectionDivDimensions();
   }
 
+  /**
+   * Updates the selection rectangle during mouse drag.
+   *
+   * @method updateVisualSelection
+   * @param {number} currentX - Current mouse X coordinate (viewport)
+   * @param {number} currentY - Current mouse Y coordinate (viewport)
+   * @returns {void}
+   */
   updateVisualSelection(currentX, currentY) {
     this.selectionRect[2] = currentX;
     this.selectionRect[3] = currentY;
@@ -58,6 +144,14 @@ class ImageExplainPopup {
     this.updateSelectionDivDimensions();
   }
 
+  /**
+   * Finalizes visual selection when user releases mouse.
+   *
+   * @method stopVisualSelection
+   * @param {number} finalX - Final mouse X coordinate (viewport)
+   * @param {number} finalY - Final mouse Y coordinate (viewport)
+   * @returns {void}
+   */
   stopVisualSelection(finalX, finalY) {
     this.isMouseDown = false;
     this.isSelectionMade = true;
@@ -67,6 +161,12 @@ class ImageExplainPopup {
     this.updateSelectionDivDimensions();
   }
 
+  /**
+   * Crops the selected region and initiates LLM inference.
+   *
+   * @method cropImageAndInfer
+   * @returns {void}
+   */
   cropImageAndInfer() {
     const image = new Image();
     image.src = this.imageUri;
@@ -96,6 +196,13 @@ class ImageExplainPopup {
     };
   }
 
+  /**
+   * Sends the cropped image to the background script for LLM processing.
+   *
+   * @method sendImage
+   * @param {string} imageUri - Base64-encoded data URI of the cropped image region
+   * @returns {void}
+   */
   sendImage(imageUri) {
     if (!imageUri) {
       return;
@@ -107,6 +214,12 @@ class ImageExplainPopup {
     this.createResponseOverlay();
   }
 
+  /**
+   * Updates the visual selection div's dimensions and position.
+   *
+   * @method updateSelectionDivDimensions
+   * @returns {void}
+   */
   updateSelectionDivDimensions() {
     const [x1, y1, x2, y2] = this.selectionRect;
 
@@ -125,6 +238,13 @@ class ImageExplainPopup {
     this.selectionDiv.style.height = height + "px";
   }
 
+  /**
+   * Extracts numeric rectangle dimensions from the selection div's styles.
+   *
+   * @method getSelectionRectFromDiv
+   * @param {HTMLElement} selectionDiv - The selection rectangle div element
+   * @returns {number[]} Rectangle as [left, top, width, height]
+   */
   getSelectionRectFromDiv(selectionDiv) {
     return [
       parseFloat(selectionDiv.style.left),
@@ -134,6 +254,20 @@ class ImageExplainPopup {
     ];
   }
 
+  /**
+   * Calculates scaled coordinates for canvas cropping.
+   *
+   * @method calculateScaledCoordinates
+   * @param {HTMLImageElement} image - The full screenshot image element
+   * @param {DOMRect} imgRect - Bounding rectangle of the displayed image
+   * @param {DOMRect} popupRect - Bounding rectangle of the popup container
+   * @param {number[]} selectionRect - Selection rectangle [left, top, width, height]
+   * @returns {Object} Scaled coordinates for canvas drawImage
+   * @returns {number} returns.sx - Source x coordinate
+   * @returns {number} returns.sy - Source y coordinate
+   * @returns {number} returns.sWidth - Source width
+   * @returns {number} returns.sHeight - Source height
+   */
   calculateScaledCoordinates(image, imgRect, popupRect, selectionRect) {
     const [left, top, width, height] = selectionRect;
     const scaleX = image.naturalWidth / imgRect.width;
@@ -149,6 +283,12 @@ class ImageExplainPopup {
     return { sx, sy, sWidth, sHeight };
   }
 
+  /**
+   * Creates a response overlay popup positioned near the selection.
+   *
+   * @method createResponseOverlay
+   * @returns {void}
+   */
   createResponseOverlay() {
     const popupRectWindow = this.element.getBoundingClientRect();
 
@@ -215,6 +355,12 @@ class ImageExplainPopup {
     this.responsePopup = overlay;
   }
 
+  /**
+   * Removes the visual selection rectangle and clears selection state.
+   *
+   * @method removeVisualSelection
+   * @returns {void}
+   */
   removeVisualSelection() {
     if (this.selectionDiv) {
       this.selectionDiv.remove();
@@ -224,6 +370,12 @@ class ImageExplainPopup {
     this.isSelectionMade = false;
   }
 
+  /**
+   * Removes the response overlay and resets inference state.
+   *
+   * @method removeResponsePopup
+   * @returns {void}
+   */
   removeResponsePopup() {
     if (this.responsePopup) {
       this.responsePopup.classList.remove("loading");
@@ -237,6 +389,12 @@ class ImageExplainPopup {
     this.hasReceivedFirstToken = false;
   }
 
+  /**
+   * Completely removes the image popup and all associated elements.
+   *
+   * @method remove
+   * @returns {void}
+   */
   remove() {
     if (this.responsePopup) {
       this.removeResponsePopup();

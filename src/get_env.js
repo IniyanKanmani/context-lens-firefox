@@ -1,3 +1,12 @@
+/**
+ * Retrieves an environment variable value from the .env file.
+ *
+ * @async
+ * @function getEnv
+ * @param {string} key - The environment variable key to retrieve
+ * @returns {Promise<string>} The value of the environment variable, or empty string if not found
+ * @throws {Error} Logs error to console if .env file cannot be loaded
+ */
 export async function getEnv(key) {
   let value = "";
 

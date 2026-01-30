@@ -1,12 +1,65 @@
+/**
+ * Contextual explain popup class for the Context Lens Firefox extension.
+ *
+ * This class represents a popup that allows users to provide additional context
+ * before requesting an AI explanation. It displays a textarea input where users
+ * can type context, followed by a response area for the LLM output.
+ *
+ * @class ContextualExplainPopup
+ * @classdesc Popup for text explanations with user-provided additional context
+ */
 class ContextualExplainPopup {
+  /**
+   * Creates a new ContextualExplainPopup instance.
+   *
+   * @constructor
+   * @param {number} popupId - Unique identifier for this popup instance
+   */
   constructor(popupId) {
+    /**
+     * Popup type identifier.
+     * @type {string}
+     * @default "contextual-explain"
+     */
     this.type = "contextual-explain";
+
+    /**
+     * Unique popup identifier.
+     * @type {number}
+     */
     this.popupId = popupId;
+
+    /**
+     * Processing state flag. True during context input and LLM processing.
+     * @type {boolean}
+     * @default true
+     */
     this.isBeingProcessed = true;
+
+    /**
+     * Flag indicating if user has submitted context input.
+     * Used to determine appropriate close behavior.
+     * @type {boolean}
+     * @default false
+     */
     this.gotContextInput = false;
+
+    /**
+     * Flag indicating if first token has been received from LLM stream.
+     * @type {boolean}
+     * @default false
+     */
     this.hasReceivedFirstToken = false;
   }
 
+  /**
+   * Creates and displays the popup with context input UI.
+   *
+   * @method create
+   * @param {Range} range - DOM Range object representing the selected text position
+   * @param {string} selectedText - The text selected by the user for explanation
+   * @returns {void}
+   */
   create(range, selectedText) {
     const rangeRectDims = range.getBoundingClientRect();
 
@@ -69,7 +122,7 @@ class ContextualExplainPopup {
     this.element = popup;
     this.selectedText = selectedText;
 
-    // Hack to give textarea focus
+    // Hack to give textarea focus and restore text selection
     setTimeout(() => {
       textarea.focus();
       textarea.setSelectionRange(null, null);
@@ -91,6 +144,13 @@ class ContextualExplainPopup {
     });
   }
 
+  /**
+   * Submits the additional context and initiates the LLM request.
+   *
+   * @method sendContext
+   * @param {string} additionalContext - The additional context provided by the user
+   * @returns {void}
+   */
   sendContext(additionalContext) {
     if (!additionalContext) {
       return;
@@ -113,6 +173,12 @@ class ContextualExplainPopup {
     this.element.textContent = "Fetching...";
   }
 
+  /**
+   * Removes the popup from the DOM and updates processing state.
+   *
+   * @method remove
+   * @returns {void}
+   */
   remove() {
     this.element.remove();
     this.isBeingProcessed = false;

@@ -1,3 +1,20 @@
+/**
+ * System prompts for the Context Lens Firefox extension.
+ *
+ * These prompts define the behavior and response format for the LLM
+ * across different explanation modes: quick explain, contextual explain,
+ * and image explain.
+ *
+ * @module prompt
+ * @description System prompts for LLM interactions
+ */
+
+/**
+ * System prompt for quick explanations of selected text.
+ *
+ * @constant {string}
+ * @default
+ */
 export const quickExplainSystemPrompt = `
   # Context Lens
 
@@ -19,6 +36,12 @@ export const quickExplainSystemPrompt = `
     - Keep output within a max of 2 paragraphs and reduce use of new line characters
 `;
 
+/**
+ * System prompt for contextual explanations with additional user input.
+ *
+ * @constant {string}
+ * @default
+ */
 export const contextualExplainSystemPrompt = `
   # Context Lens
 
@@ -40,6 +63,12 @@ export const contextualExplainSystemPrompt = `
     - Keep output within a max of 2 paragraphs and reduce use of new line characters
 `;
 
+/**
+ * System prompt for image-based explanations.
+ *
+ * @constant {string}
+ * @default
+ */
 export const imageExplainSystemPrompt = `
   # Context Lens
 
