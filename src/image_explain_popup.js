@@ -81,15 +81,18 @@ class ImageExplainPopup {
    * @returns {void}
    */
   create(imageUri) {
-    const backdrop = document.createElement("div");
-    backdrop.className = "popup-backdrop";
-    document.body.appendChild(backdrop);
-    document.body.classList.add("scroll-locked");
+    shadowContainer.lockPageScroll();
+
+    const backdrop = shadowContainer.createPopupElement(
+      `image-backdrop-${this.popupId}`,
+      "popup-backdrop",
+    );
     this.backdrop = backdrop;
 
-    const popup = document.createElement("div");
-    popup.className = "context-lens image-popup";
-    popup.id = `image-popup-${this.popupId}`;
+    const popup = shadowContainer.createPopupElement(
+      `image-popup-${this.popupId}`,
+      "context-lens image-popup",
+    );
 
     const img = document.createElement("img");
     img.src = imageUri;
@@ -99,13 +102,14 @@ class ImageExplainPopup {
     this.img = img;
     this.element = popup;
     this.imageUri = imageUri;
-    document.body.appendChild(popup);
 
-    const closeBtn = document.createElement("button");
-    closeBtn.className = "context-lens image-popup close-btn";
+    const closeBtn = shadowContainer.createPopupElement(
+      `image-close-btn-${this.popupId}`,
+      "context-lens image-popup close-btn",
+    );
+
     closeBtn.textContent = "×";
     closeBtn.addEventListener("click", () => removePopup(this.popupId));
-    document.body.appendChild(closeBtn);
     this.closeBtn = closeBtn;
   }
 
@@ -342,17 +346,19 @@ class ImageExplainPopup {
       top = selectionRectDims.bottom - margin - overlayHeight;
     }
 
-    const overlay = document.createElement("div");
-    overlay.className = "context-lens response-popup";
-    overlay.id = `text-popup-${this.popupId}`;
-    overlay.style.left = left + "px";
-    overlay.style.top = top + "px";
+    const responsePopup = shadowContainer.createPopupElement(
+      `text-popup-${this.popupId}`,
+      "context-lens response-popup",
+    );
 
-    overlay.classList.add("loading");
-    overlay.textContent = "Fetching...";
+    responsePopup.style.left = left + "px";
+    responsePopup.style.top = top + "px";
 
-    this.element.appendChild(overlay);
-    this.responsePopup = overlay;
+    responsePopup.classList.add("loading");
+    responsePopup.textContent = "Fetching...";
+
+    this.element.appendChild(responsePopup);
+    this.responsePopup = responsePopup;
   }
 
   /**
@@ -363,7 +369,7 @@ class ImageExplainPopup {
    */
   removeVisualSelection() {
     if (this.selectionDiv) {
-      this.selectionDiv.remove();
+      shadowContainer.removePopupElement(this.selectionDiv);
     }
 
     this.selectionRect = null;
@@ -379,7 +385,7 @@ class ImageExplainPopup {
   removeResponsePopup() {
     if (this.responsePopup) {
       this.responsePopup.classList.remove("loading");
-      this.responsePopup.remove();
+      shadowContainer.removePopupElement(this.responsePopup);
     }
 
     this.content = "";
@@ -403,18 +409,20 @@ class ImageExplainPopup {
     }
 
     if (this.selectionDiv) {
-      this.selectionDiv.remove();
+      shadowContainer.removePopupElement(this.selectionDiv);
     }
 
     if (this.closeBtn) {
-      this.closeBtn.remove();
+      shadowContainer.removePopupElement(this.closeBtn);
     }
 
-    this.element.remove();
+    if (this.element) {
+      shadowContainer.removePopupElement(this.element);
+    }
 
     if (this.backdrop) {
-      document.body.classList.remove("scroll-locked");
-      this.backdrop.remove();
+      shadowContainer.unlockPageScroll();
+      shadowContainer.removePopupElement(this.backdrop);
     }
 
     this.isBeingProcessed = false;

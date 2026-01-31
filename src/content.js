@@ -19,20 +19,19 @@
  */
 
 /**
- * Inject the popup CSS stylesheet into the page head.
- * This ensures all popup elements are properly styled.
- */
-const link = document.createElement("link");
-link.rel = "stylesheet";
-link.href = browser.runtime.getURL("src/popup.css");
-document.head.appendChild(link);
-
-/**
  * Global Popups manager instance.
  * Manages lifecycle of all popup instances on the page.
  * @type {Popups}
  */
 const popups = new Popups();
+
+/**
+ * Global Shadow DOM container instance.
+ * Provides style isolation for all popups.
+ * @type {ShadowPopupContainer}
+ */
+const shadowContainer = new ShadowPopupContainer();
+shadowContainer.initialize();
 
 /**
  * Listen for messages from the background script.
@@ -137,7 +136,10 @@ document.addEventListener("keydown", (event) => {
  */
 document.addEventListener("mousedown", (event) => {
   const clickedElement = event.target;
-  const isInsidePopup = clickedElement.closest(".context-lens");
+  const composedPath = event.composedPath();
+  const isInsidePopup = composedPath.some((el) =>
+    el.classList?.contains("context-lens"),
+  );
   const elementId = clickedElement.id;
 
   const lastPopup = popups.getLastPopup();

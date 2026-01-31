@@ -101,9 +101,11 @@ class ContextualExplainPopup {
     left += window.scrollX;
     top += window.scrollY;
 
-    const popup = document.createElement("div");
-    popup.className = "context-lens context-input";
-    popup.id = `text-popup-${this.popupId}`;
+    const popup = shadowContainer.createPopupElement(
+      `text-popup-${this.popupId}`,
+      "context-lens context-input",
+    );
+
     popup.style.left = left + "px";
     popup.style.top = top + "px";
 
@@ -118,7 +120,7 @@ class ContextualExplainPopup {
 
     popup.appendChild(textarea);
     popup.appendChild(button);
-    document.body.appendChild(popup);
+
     this.element = popup;
     this.selectedText = selectedText;
 
@@ -180,7 +182,7 @@ class ContextualExplainPopup {
    * @returns {void}
    */
   remove() {
-    this.element.remove();
+    shadowContainer.removePopupElement(this.element);
     this.isBeingProcessed = false;
   }
 }

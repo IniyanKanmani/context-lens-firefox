@@ -94,16 +94,17 @@ class QuickExplainPopup {
     left += window.scrollX;
     top += window.scrollY;
 
-    const popup = document.createElement("div");
-    popup.className = "context-lens response-popup";
-    popup.id = `text-popup-${this.popupId}`;
+    const popup = shadowContainer.createPopupElement(
+      `text-popup-${this.popupId}`,
+      "context-lens response-popup",
+    );
+
     popup.style.left = left + "px";
     popup.style.top = top + "px";
 
     popup.classList.add("loading");
     popup.textContent = "Fetching...";
 
-    document.body.appendChild(popup);
     this.element = popup;
     this.selectedText = selectedText;
 
@@ -117,7 +118,7 @@ class QuickExplainPopup {
    * @returns {void}
    */
   remove() {
-    this.element.remove();
+    shadowContainer.removePopupElement(this.element);
     this.isBeingProcessed = false;
   }
 }
