@@ -6,6 +6,10 @@ Simply highlight any text on a webpage, use Shift+Alt+E for instant explanation 
 
 [Firefox Addon product page](https://addons.mozilla.org/en-US/firefox/addon/context-lens)
 
+## Demo
+
+https://github.com/user-attachments/assets/7505ec3e-b4c8-4621-87cd-454b91b8612b
+
 ## Usage
 
 - Highlight text on any webpage.
