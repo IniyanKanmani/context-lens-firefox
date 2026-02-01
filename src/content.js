@@ -135,12 +135,10 @@ document.addEventListener("keydown", (event) => {
  * @param {MouseEvent} event - Mouse event object
  */
 document.addEventListener("mousedown", (event) => {
-  const clickedElement = event.target;
   const composedPath = event.composedPath();
   const isInsidePopup = composedPath.some((el) =>
     el.classList?.contains("context-lens"),
   );
-  const elementId = clickedElement.id;
 
   const lastPopup = popups.getLastPopup();
 
@@ -158,6 +156,12 @@ document.addEventListener("mousedown", (event) => {
 
     return;
   }
+
+  if (composedPath.length < 0) {
+    return;
+  }
+
+  const elementId = composedPath[0].id;
 
   // Click inside text popup - manage popup hierarchy
   if (

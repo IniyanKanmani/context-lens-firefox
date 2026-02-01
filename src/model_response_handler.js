@@ -120,15 +120,15 @@ function handleLLMStreamClosed(popupId) {
 
   setTimeout(() => {
     targetElement.classList.add("complete");
+    popup.hasReceivedFirstToken = false;
+    popup.isBeingProcessed = false;
+
+    if (popup.type === "image-explain") {
+      popup.isBeingInfered = false;
+    }
 
     setTimeout(() => {
       targetElement.classList.remove("complete");
-      popup.hasReceivedFirstToken = false;
-      popup.isBeingProcessed = false;
-
-      if (popup.type === "image-explain") {
-        popup.isBeingInfered = false;
-      }
     }, 750);
   }, 250);
 }
