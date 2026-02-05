@@ -76,16 +76,17 @@ class Popups {
    * @method createQuickExplainPopup
    * @param {Range} range - The DOM Range object representing selected text position
    * @param {string} selectedText - The text selected by the user for explanation
+   * @param {boolean} isFromShadowDom - Whether the selection is from shadow DOM
    * @returns {void}
    */
-  createQuickExplainPopup(range, selectedText) {
+  createQuickExplainPopup(range, selectedText, isFromShadowDom) {
     const popupId = ++this.counter;
 
     if (popupId == 1) {
       this.basePopups.push(popupId);
     }
 
-    const popup = new QuickExplainPopup(popupId);
+    const popup = new QuickExplainPopup(popupId, isFromShadowDom);
     popup.create(range, selectedText);
     this.popups.set(popupId, popup);
   }
@@ -96,16 +97,17 @@ class Popups {
    * @method createContextualExplainPopup
    * @param {Range} range - The DOM Range object representing selected text position
    * @param {string} selectedText - The text selected by the user for explanation
+   * @param {boolean} isFromShadowDom - Whether the selection is from shadow DOM
    * @returns {void}
    */
-  createContextualExplainPopup(range, selectedText) {
+  createContextualExplainPopup(range, selectedText, isFromShadowDom) {
     const popupId = ++this.counter;
 
     if (popupId == 1) {
       this.basePopups.push(popupId);
     }
 
-    const popup = new ContextualExplainPopup(popupId);
+    const popup = new ContextualExplainPopup(popupId, isFromShadowDom);
     popup.create(range, selectedText);
     this.popups.set(popupId, popup);
   }

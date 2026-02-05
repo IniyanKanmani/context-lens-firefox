@@ -14,8 +14,9 @@ class ContextualExplainPopup {
    *
    * @constructor
    * @param {number} popupId - Unique identifier for this popup instance
+   * @param {boolean} isFromShadowDom - Whether the selection is from shadow DOM
    */
-  constructor(popupId) {
+  constructor(popupId, isFromShadowDom) {
     /**
      * Popup type identifier.
      * @type {string}
@@ -50,6 +51,18 @@ class ContextualExplainPopup {
      * @default false
      */
     this.hasReceivedFirstToken = false;
+
+    /**
+     * Whether the selection is from shadow DOM.
+     * @type {boolean}
+     */
+    this.isFromShadowDom = isFromShadowDom;
+
+    /**
+     * Original range for selection restoration.
+     * @type {Range|null}
+     */
+    this.originalRange = null;
   }
 
   /**
@@ -61,6 +74,8 @@ class ContextualExplainPopup {
    * @returns {void}
    */
   create(range, selectedText) {
+    this.originalRange = range;
+
     const rangeRectDims = range.getBoundingClientRect();
 
     const overlayWidth = 400;
@@ -124,15 +139,11 @@ class ContextualExplainPopup {
     this.element = popup;
     this.selectedText = selectedText;
 
-    // Hack to give textarea focus and restore text selection
+    // Give textarea focus
     setTimeout(() => {
       textarea.focus();
       textarea.setSelectionRange(null, null);
-
-      const selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }, 100);
+    }, 50);
 
     button.addEventListener("click", () => {
       this.sendContext(textarea.value.trim());
@@ -173,6 +184,38 @@ class ContextualExplainPopup {
     this.element.classList.add("response-popup");
     this.element.classList.add("loading");
     this.element.textContent = "Fetching...";
+
+    this.restoreSelection();
+  }
+
+  /**
+   * Restores the original text selection.
+   *
+   * @method restoreSelection
+   * @returns {void}
+   */
+  restoreSelection() {
+    if (!this.originalRange) return;
+
+    try {
+      const startContainer = this.originalRange.startContainer;
+      const endContainer = this.originalRange.endContainer;
+
+      if (!startContainer.isConnected || !endContainer.isConnected) {
+        return;
+      }
+
+      let selection;
+      if (this.isFromShadowDom) {
+        if (!shadowContainer.shadow) return;
+        selection = shadowContainer.shadow.getSelection();
+      } else {
+        selection = window.getSelection();
+      }
+
+      selection.removeAllRanges();
+      selection.addRange(this.originalRange);
+    } catch (e) {}
   }
 
   /**
@@ -182,7 +225,9 @@ class ContextualExplainPopup {
    * @returns {void}
    */
   remove() {
+    this.restoreSelection();
     shadowContainer.removePopupElement(this.element);
+
     this.isBeingProcessed = false;
   }
 }

@@ -14,8 +14,9 @@ class QuickExplainPopup {
    *
    * @constructor
    * @param {number} popupId - Unique identifier for this popup instance
+   * @param {boolean} isFromShadowDom - Whether the selection is from shadow DOM
    */
-  constructor(popupId) {
+  constructor(popupId, isFromShadowDom) {
     /**
      * Popup type identifier.
      * @type {string}
@@ -43,6 +44,18 @@ class QuickExplainPopup {
      * @default false
      */
     this.hasReceivedFirstToken = false;
+
+    /**
+     * Whether the selection is from shadow DOM.
+     * @type {boolean}
+     */
+    this.isFromShadowDom = isFromShadowDom;
+
+    /**
+     * Original range for selection restoration.
+     * @type {Range|null}
+     */
+    this.originalRange = null;
   }
 
   /**
@@ -54,6 +67,8 @@ class QuickExplainPopup {
    * @returns {void}
    */
   create(range, selectedText) {
+    this.originalRange = range;
+
     const rangeRectDims = range.getBoundingClientRect();
 
     const overlayWidth = 400;
@@ -112,13 +127,45 @@ class QuickExplainPopup {
   }
 
   /**
+   * Restores the original text selection.
+   *
+   * @method restoreSelection
+   * @returns {void}
+   */
+  restoreSelection() {
+    if (!this.originalRange) return;
+
+    try {
+      const startContainer = this.originalRange.startContainer;
+      const endContainer = this.originalRange.endContainer;
+
+      if (!startContainer.isConnected || !endContainer.isConnected) {
+        return;
+      }
+
+      let selection;
+      if (this.isFromShadowDom) {
+        if (!shadowContainer.shadow) return;
+        selection = shadowContainer.shadow.getSelection();
+      } else {
+        selection = window.getSelection();
+      }
+
+      selection.removeAllRanges();
+      selection.addRange(this.originalRange);
+    } catch (e) {}
+  }
+
+  /**
    * Removes the popup from the DOM and updates processing state.
    *
    * @method remove
    * @returns {void}
    */
   remove() {
+    this.restoreSelection();
     shadowContainer.removePopupElement(this.element);
+
     this.isBeingProcessed = false;
   }
 }
